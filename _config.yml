@@ -1,1 +1,7 @@
 theme: jekyll-theme-cayman
+title: Costlocker
+description: API documentation, sample apps, ...
+links:
+  API Reference: http://docs.costlocker.apiary.io/
+  Costlocker.com: https://costlocker.com
+  Costlocker.cz: http://costlocker.cz
