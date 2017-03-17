@@ -1,0 +1,736 @@
+FORMAT: 1A
+HOST: https://app.costlocker.com/api-public/v1
+
+# Costlocker Simple API
+
+>**Note**: _This is the first version of the document. The structure and description may change._ 
+> 
+> Is something unclear? Write me at **development@costlocker.com**
+
+### Changelog
+
+#### _July 2015_
+
+* **Simple API** - we provide read only access at this time!
+* **General response attributes**
+    * `deactivated` - the Boolean value determines whether the item in Costlocker is marked as active (`false` value) or inactive (`true` value).
+    * `da_*` - all `date` keys or keys prefixed with `da_` contain **date** type values (e.g. `2016-11-24`).
+
+#### _November 2016_
+
+* **Simple_People** - add attributes `type`; `salary_hours`, `salary_amount` or `hourly_rate`
+* **Simple_Projects** - add support for filtering by id (`project`) and pagination (`limit`, `offset`)
+* **Simple_Projects_Ce** - add attributes `person_rate`, `person_overhead` and filtering by `project`, `person`, `activity`, `client`
+* **Simple_Timesheet** - add pagination (`limit`, `offset`) and `withRates` parameter
+
+
+### Data Structures
+
+#### clDate (string) - `2016-12-24` - YYYY-MM-DD
+
+
+## Getting Started [/]
+
+### POST request [POST /]
+
+* The request is always called over **http://app.costlocker.com/api-public/v1/**.
+* The request consists of a set of **function calls** grouped into a JSON object.
+* **The called functions** can be combined arbitrarily.
+* The called functions can contain **parameters**.
+* The data are returned under the key of the function name.
+
++ Request (application/json)
+     
+      + Headers
+
+            Api-Token: YOUR-API-TOKEN
+    
+    + Body
+
+            {
+                "Simple_People": {},
+                "Simple_Timesheet": {
+                    "datef": "2016-11-01",
+                    "datet": "2016-11-30"
+                }
+            }
+
++ Response 200 (application/json)
+    
+    + Body
+
+            {
+                "Simple_People": [
+                    {
+                        "id": "1",
+                        "first_name": "John",
+                        "last_name": "Doe",
+                        "mail": "john.doe@example.com",
+                        "deactivated": false,
+                        "type": "salary",
+                        "salary_hours": 160,
+                        "salary_amount": 30000
+                    }
+                ],
+                "Simple_Timesheet": []
+            }
+
+### Legacy GET request [GET /Simple_People]
+
+* The request is called over **http://app.costlocker.com/api-public/v1/{function}**.
+* The request **cannot contain** parameters or multiple functions.
+* The data are returned in **raw array** without function name.
+
++ Request (application/json)
+     
+      + Headers
+
+            Api-Token: YOUR-API-TOKEN
+
++ Response 200 (application/json)
+    
+    + Body
+
+            [
+                {
+                    "id": "1",
+                    "first_name": "John",
+                    "last_name": "Doe",
+                    "mail": "john.doe@example.com",
+                    "deactivated": false,
+                    "type": "salary",
+                    "salary_hours": 160,
+                    "salary_amount": 30000
+                }
+            ]
+
+## People [/Simple_People]
+
+### List of active and inactive people [POST /]
+
+Legacy `GET https://app.costlocker.com/api-public/v1/Simple_People`
+
++ Request (application/json)
+     
+      + Headers
+
+            Api-Token: YOUR-API-TOKEN
+    
+    + Body
+
+            {
+                "Simple_People": {}
+            }
+
++ Response 200 (application/json)
+
+    + Attributes
+        + array[object]
+            + id (number, required)
+            + first_name (string, required)
+            + last_name (string, required)
+            + mail (string, required)
+            + deactivated (boolean, required)
+            + type (enum, required)
+                + salary
+                + hourly
+            + salary_hours (number, optional) - when `type=salary`
+            + salary_amount (number, optional) - when `type=salary`
+            + hourly_rate (number, optional) - when `type=hourly`
+
+    + Body
+
+
+            {
+                "Simple_People": [
+                    {
+                        "id": "1",
+                        "first_name": "John",
+                        "last_name": "Doe",
+                        "mail": "john.doe@example.com",
+                        "deactivated": false,
+                        "type": "salary",
+                        "salary_hours": 160,
+                        "salary_amount": 30000
+                    },
+                    {
+                        "id": "2",
+                        "first_name": "James",
+                        "last_name": "Bond",
+                        "mail": "james.bond@example.com",
+                        "deactivated": false,
+                        "type": "hourly",
+                        "hourly_rate": 500
+                    }
+                ]
+            }
+
+## Activities [/Simple_Activities]
+
+### List of active and inactive activities [POST /]
+
+Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Activities`
+
++ Request (application/json)
+     
+      + Headers
+
+            Api-Token: YOUR-API-TOKEN
+    
+    + Body
+
+            {
+                "Simple_Activities": {}
+            }
+
++ Response 200 (application/json)
+
+        {
+            "Simple_Activities": [
+                { 
+                    "id": "1", 
+                    "name": "Design",
+                    "deactivated": false
+                }
+            ]
+        }
+
+
+## Clients [/Simple_Clients]
+
+### List of active and inactive clients [POST /]
+
+Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Clients`
+
++ Request (application/json)
+     
+      + Headers
+
+            Api-Token: YOUR-API-TOKEN
+    
+    + Body
+
+            {
+                "Simple_Clients": {}
+            }
+
++ Response 200 (application/json)
+
+        {
+            "Simple_Clients": [
+                { 
+                    "id": "1", 
+                    "name": "Google",
+                    "deactivated": false
+                }
+            ]
+        }
+
+## Projects [/Simple_Projects]
+
+Projects are ordered by `id DESC`.
+
+### Filtered projects [POST /]
+
++ Request (application/json)
+
+    + Attributes
+        + project (array[number], optional) - list of project ids
+        + limit (number, optional) - pagination, by default all projects are returned
+        + offset: 0 (number, optional) - pagination
+
+    + Headers
+
+            Api-Token: YOUR-API-TOKEN
+    
+    + Body
+
+            {
+                "Simple_Projects": {
+                    "project": [1, 2],
+                    "limit": 20,
+                    "offset": 0
+                }
+            }
+
++ Response 200 (application/json)
+
+    + Attributes
+        + array[object]
+            + state (enum)
+                + running
+                + finished
+
+    + Body
+
+            {
+                "Simple_Projects": [
+                    {
+                        "id": "1",
+                        "name": "GMail Redesign",
+                        "client_id": "1",
+                        "state": "running",
+                        "jobid": 1400001,
+                        "da_start": "2014-10-24",
+                        "da_end": "2014-12-24",
+                        "da_created": "2014-12-24",
+                        "da_close": null,
+                        "revenue": 680400.00,
+                        "billed": 85000.00,
+                        "hours_budgeted": 480,
+                        "hours_tracked": 250,
+                        "responsible_people": [
+                            {
+                                "id": "1"
+                            }, 
+                            {
+                                "id": "2"
+                            }
+                        ],
+                        "tags": [
+                            {
+                                "id": "1"
+                            },
+                            {
+                                "id": "2"
+                            }
+                        ]
+                    }
+                ]
+            }
+
+### List of all ongoing and closed projects [POST /]
+
+Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Projects`
+
++ Request (application/json)
+
+    + Headers
+
+            Api-Token: YOUR-API-TOKEN
+    
+    + Body
+
+            {
+                "Simple_Projects": {
+                }
+            }
+
++ Response 200 (application/json)
+
+    + Attributes
+        + array[object]
+            + state (enum)
+                + running
+                + finished
+
+    + Body
+
+            {
+                "Simple_Projects": [
+                    {
+                        "id": "1",
+                        "name": "GMail Redesign",
+                        "client_id": "1",
+                        "state": "running",
+                        "jobid": 1400001,
+                        "da_start": "2014-10-24",
+                        "da_end": "2014-12-24",
+                        "da_created": "2014-12-24",
+                        "da_close": null,
+                        "revenue": 680400.00,
+                        "billed": 85000.00,
+                        "hours_budgeted": 480,
+                        "hours_tracked": 250,
+                        "responsible_people": [
+                            {
+                                "id": "1"
+                            }, 
+                            {
+                                "id": "2"
+                            }
+                        ],
+                        "tags": [
+                            {
+                                "id": "1"
+                            },
+                            {
+                                "id": "2"
+                            }
+                        ]
+                    }
+                ]
+            }
+
+
+## Projects - Billing [/Simple_Projects_Billing]
+
+### Billing items across ongoing and closed projects [POST /]
+
+Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Projects_Billing`
+
++ Request (application/json)
+     
+      + Headers
+
+            Api-Token: YOUR-API-TOKEN
+    
+    + Body
+
+            {
+                "Simple_Projects_Billing": {}
+            }
+
++ Response 200 (application/json)
+
+
+        {
+            "Simple_Projects_Billing": [
+                {
+                    "id": "1",
+                    "name": "Invoice201400001",
+                    "project_id": "1",
+                    "da": "2014-10-10",
+                    "amount": 15200,
+                    "issued": false
+                }
+            ]
+        }
+
+
+
+## Projects - People Costs [/Simple_Projects_Ce]
+
+### Filtered People Costs [POST /]
+
++ Request (application/json)
+
+    + Attributes
+        + project (array[number], optional) - list of project ids
+        + person (array[number], optional) - list of person ids
+        + activity (array[number], optional) - list of activity ids
+        + client (array[number], optional) - list of client ids
+
+    + Headers
+
+            Api-Token: YOUR-API-TOKEN
+    
+    + Body
+
+            {
+                "Simple_Projects_Ce": {
+                    "project": [1, 2],
+                    "person": [1],
+                    "activity": []
+                }
+            }
+
++ Response 200 (application/json)
+
+    + Attributes
+        + array[object]
+            + person_rate (number) - hourly rate
+            + person_overhead (number) - overhead
+
+    + Body
+
+            {
+                "Simple_Projects_Ce": [
+                    {
+                        "project_id": "1",
+                        "activity_id": "1",
+                        "person_id": "1",
+                        "hrs_budget": 50,
+                        "hrs_tracked": 20,
+                        "client_rate": 1500.00,
+                        "person_rate": 1000,
+                        "person_overhead": 0,
+                        "tasks": [
+                            {
+                                "name": "Analysis",
+                                "hrs_budget": 20,
+                                "hrs_tracked": 10
+                            },
+                            {
+                                "name": "Redesign",
+                                "hrs_budget": 30,
+                                "hrs_tracked": 10
+                            }
+                        ]
+                    },
+                    {
+                        "project_id": "2",
+                        "activity_id": "1",
+                        "person_id": "1",
+                        "hrs_budget": 10,
+                        "hrs_tracked": 0,
+                        "client_rate": 50,
+                        "person_rate": 50,
+                        "person_overhead": 100
+                    }
+                ]
+            }
+
+
+### People Costs across ongoing and closed projects. [POST /]
+
+Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Projects_Ce`
+
++ Request (application/json)
+     
+      + Headers
+
+            Api-Token: YOUR-API-TOKEN
+    
+    + Body
+
+            {
+                "Simple_Projects_Ce": {}
+            }
+
++ Response 200 (application/json)
+
+        {
+            "Simple_Projects_Ce": [
+                {
+                    "project_id": "1",
+                    "activity_id": "1",
+                    "person_id": "1",
+                    "hrs_budget": 50,
+                    "hrs_tracked": 20,
+                    "client_rate": 1500.00,
+                    "person_rate": 1000,
+                    "person_overhead": 0,
+                    "tasks": [
+                        {
+                            "name": "Analysis",
+                            "hrs_budget": 20,
+                            "hrs_tracked": 10
+                        },
+                        {
+                            "name": "Redesign",
+                            "hrs_budget": 30,
+                            "hrs_tracked": 10
+                        }
+                    ]
+                },
+                {
+                    "project_id": "2",
+                    "activity_id": "1",
+                    "person_id": "1",
+                    "hrs_budget": 10,
+                    "hrs_tracked": 0,
+                    "client_rate": 50,
+                    "person_rate": 500,
+                    "person_overhead": 100
+                }
+            ]
+        }
+
+## Projects - Expenses [/Simple_Projects_Expenses]
+
+### Project Expenses across running and finished projects [POST /]
+
+Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Projects_Expenses`
+
++ Request (application/json)
+     
+      + Headers
+
+            Api-Token: YOUR-API-TOKEN
+    
+    + Body
+
+            {
+                "Simple_Projects_Expenses": {}
+            }
+
++ Response 200 (application/json)
+
+        {
+            "Simple_Projects_Expenses": [
+                {
+                    "id": "1",
+                    "project_id": "1",
+                    "name": "Invision",
+                    "date": "2014-09-18",
+                    "buy": 3000,
+                    "sell": 3000
+                }
+            ]
+        }
+
+
+## Timesheet [/Simple_Timesheet]
+
+### Filtered entries [POST /]
+
++ Request (application/json)
+
+    + Attributes
+        + project (array[number], optional) - array of projects id's to be limited
+        + person (array[number], optional) - array of people id's to be limited
+        + activity (array[number], optional) - array of acitivities is's to be limited
+        + client (array[number], optional) - array of clients id's to be limited
+        + nonproject: false (boolean, optional) -  if no-project entries are included in response
+        + description_name (string, optional) - filter by description - case insensitive, diacritic insensitive
+        + task_name (string, optional) - filter by task name - case-insensitive, diacritic-insensitive
+        + datef (clDate, optional) - only entries created after specific date (Y-m-d)
+        + datet (clDate, optional) - only entries created before specific date (Y-m-d)
+        + withRates: false (boolean, optional) - if `true` then `client_rate`, `person_rate`, `person_overhead` attributes are returned (just like in `Simple_Projects_Ce`)
+        + limit (number, optional) - pagination, by default all projects are returned
+        + offset: 0 (number, optional) - pagination
+
+    + Headers
+
+            Api-Token: YOUR-API-TOKEN
+    
+    + Body
+
+            {
+                "Simple_Timesheet": {
+                    "project": [1, 2],
+                    "person": [1],
+                    "activity": [],
+                    "client": [],
+                    "nonproject": true,
+                    "description_name": null,
+                    "task_name": null,
+                    "datef": "2016-11-01",
+                    "datet": "2016-11-30",
+                    "withRates": true,
+                    "limit": 5,
+                    "offset": 0
+                }
+            }
+
++ Response 200 (application/json)
+
+        {
+            "Simple_Timesheet": [
+                {
+                    "date": "2015-07-08T20:09:16+0000",
+                    "project": "1",
+                    "person": "1",
+                    "activity": "1",
+                    "client": "2",
+                    "task": "1",
+                    "interval": 1800,
+                    "description": "Explore current app",
+                    "task_name": "Analysis",
+                    "client_rate": 1500.00,
+                    "person_rate": 1000,
+                    "person_overhead": 0
+                },
+                {
+                    "date": "2015-02-09T20:09:16+0000",
+                    "project": "2",
+                    "person": "1",
+                    "activity": "3",
+                    "client": "2",
+                    "task": "2",
+                    "interval": 9823,
+                    "description": "Spike solution in Invision",
+                    "task_name": "Redesign",
+                    "client_rate": 50,
+                    "person_rate": 500,
+                    "person_overhead": 100
+                },      
+                {  
+                    "date":"2016-11-29T10:32:06+0000",
+                    "project":null,
+                    "person":"1",
+                    "activity":null,
+                    "client":null,
+                    "task":null,
+                    "interval":7194,
+                    "description":"Preparing new project",
+                    "task_name":null,
+                    "client_rate":null,
+                    "person_rate":null,
+                    "person_overhead":null
+                }
+            ]   
+        }
+
+### All entries [POST /]
+
+Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Timesheet`
+
+* `withRates=false` - entries are without rates (client rate, person rate, person overhead)
+* `nonproject=false` - entries with assigned project, no-project entries are ignored
+
++ Request (application/json)
+
+    + Headers
+
+            Api-Token: YOUR-API-TOKEN
+    
+    + Body
+
+            {
+                "Simple_Timesheet": {}
+            }
+
++ Response 200 (application/json)
+
+
+        {
+            "Simple_Timesheet": [
+                {
+                    "date": "2015-07-08T20:09:16+0000",
+                    "project": "1",
+                    "person": "1",
+                    "activity": "1",
+                    "client": "2",
+                    "task": "1",
+                    "interval": 1800,
+                    "description": "Explore current app",
+                    "task_name": "Analysis"
+                },
+                {
+                    "date": "2015-02-09T20:09:16+0000",
+                    "project": "2",
+                    "person": "1",
+                    "activity": "3",
+                    "client": "2",
+                    "task": "2",
+                    "interval": 9823,
+                    "description": "Spike solution in Invision",
+                    "task_name": "Redesign"
+                }
+            ] 
+        }
+
+## Tags [/Simple_Tags]
+
+### List of all tags [POST /]
+
+Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Tags`
+
++ Request (application/json)
+     
+      + Headers
+
+            Api-Token: YOUR-API-TOKEN
+    
+    + Body
+
+            {
+                "Simple_Tags": {}
+            }
+
++ Response 200 (application/json)
+
+        {
+            "Simple_Tags": [
+                { 
+                    "id": "1", 
+                    "name": "billable"
+                },
+                { 
+                    "id": "2", 
+                    "name": "design"
+                }
+            ]
+        }
