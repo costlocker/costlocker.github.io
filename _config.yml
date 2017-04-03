@@ -2,9 +2,6 @@ theme: jekyll-theme-cayman
 title: Costlocker
 description: API documentation, sample apps, ...
 google_analytics: "UA-40907107-6"
-links:
-  API Reference: http://docs.costlocker.apiary.io/
-  Costlocker.com: https://costlocker.com
-  Costlocker.cz: http://costlocker.cz
+permalink: /blog/:year-:month-:day-:title.html
 exclude:
   - "*.apib"

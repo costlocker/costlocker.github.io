@@ -1,3 +1,13 @@
+---
+title: Costlocker
+perex: API documentation, sample apps, ...
+links:
+  API Reference: http://docs.costlocker.apiary.io/
+  Blog: "/#blog"
+  Costlocker.com: https://costlocker.com
+  Costlocker.cz: http://costlocker.cz
+---
+
 # Costlocker
 
 This is official repository for [Costlocker API](https://costlocker.com/).
@@ -5,6 +15,16 @@ This is official repository for [Costlocker API](https://costlocker.com/).
 ## API documentation
 
 * [Costlocker API Reference (apiary)](http://docs.costlocker.apiary.io/#)
+
+## Blog
+
+<ul id="blog">
+  {% for post in site.posts %}
+    <li>
+      <a href="{{ post.url }}">{{ post.title }}</a>
+    </li>
+  {% endfor %}
+</ul>
 
 ## Sample apps
 

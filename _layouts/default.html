@@ -2,7 +2,7 @@
 <html lang="en-us">
   <head>
     <meta charset="UTF-8">
-    <title>{{ page.title | default: site.title }}</title>
+    <title>{{ page.title }} | Costlocker.github.io</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#157878">
     <link rel="shortcut icon" href="/favicon.ico">
@@ -11,9 +11,9 @@
   </head>
   <body>
     <section class="page-header">
-      <h1 class="project-name">{{ site.title | default: site.github.repository_name }}</h1>
-      <h2 class="project-tagline">{{ site.description | default: site.github.project_tagline }}</h2>
-      {% for link in site.links %}
+      <h1 class="project-name">{{ page.title }}</h1>
+      <h2 class="project-tagline">{{ page.perex }}</h2>
+      {% for link in page.links %}
       <a href="{{ link[1] }}" class="btn">{{ link[0] }}</a>
       {% endfor %}
     </section>
