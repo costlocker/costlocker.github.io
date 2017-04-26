@@ -1,7 +1,7 @@
 FORMAT: 1A
-HOST: https://app.costlocker.com/api-public/v1
+HOST: https://app.costlocker.com/api-public
 
-# Costlocker Simple API
+# Costlocker API
 
 > Help us making the API better! Use Github [issues](https://github.com/costlocker/costlocker.github.io/issues)
 > for reporting bugs or unclear documentation. 
@@ -28,14 +28,1053 @@ HOST: https://app.costlocker.com/api-public/v1
 
 * We've open-sourced our internal tool for [generating profitability reports](https://github.com/costlocker/reports)
 
+#### _April 2017_
+
+We've started working on Costlocker API v2, providing write access to Costlocker and
+enabling you to integrate Costlocker with other products you or your company uses (Toggl, Harvest, ...).
+
+* authenticate with **personal access token** (https://new.costlocker.com/api-token. )
+* create/update **projects** (detail, people costs)
+* create/update **time entries**
+* manage **webhooks** (`timeentries.create`, `timeentries.update`, `projects.create`, `peoplecosts.change`)
+
 ### Data Structures
+
+#### clUuid (string, optional) - `87d2a4e5-5a2e-413d-ab4b-5b3771cc03c1`
 
 #### clDate (string) - `2016-12-24` - YYYY-MM-DD
 
+#### clDatetime (string) - `2016-12-24 20:00:50` - YYYY-MM-DD HH:MM:SS or YYYY-MM-DDTHH:MM:SS
 
-## Getting Started [/]
+#### clProject (object)
++ id (number, optional)
++ name (string, required)
++ client (enum, required)
+    + string - client name (case insensitive)
+    + number - client id
+    + (object)
+        + name (string) - client name (case insensitive)
+        + id (number) - client id
++ dates (object, optional)
+    + date_start (clDate, required)
+    + date_end (clDate, required)
++ tags (array, optional)
+    + (enum)
+        + string - tag name (case insensitive)
+        + number - tag id (legacy)
+        + (object)
+            + name (string) - tag name (case insensitive)
++ responsible_people (array, optional)
+    + (enum)
+        + string - person email
+        + number - person id
+        + (object)
+            + email (string) - person email
+        + (clPerson) - newly created person
++ items (array[clProjectItem], optional)
 
-### POST request [POST /]
+#### clPerson (object)
++ email (string, required)
++ first_name (string, optional)
++ last_name (string, optional)
++ role (enum[string], optional)
+    + ADMIN
+    + MANAGER
+    + EMPLOYEE
++ salary (object, optional)
+    + payment (enum, required)
+        + monthly
+        + hourly
+    + salary (number, optional) - for `monthly` salary
+    + hours (number, optional) - for `monthly` salary
+    + date_start (clDate, optional) - for `monthly` salary
+    + hourly_rate (number, optional) - for `hourly` salary
+
+#### clProjectItem (object)
++ action (enum[string], optional)
+    + upsert - default action, if `action` is not specified
+    + delete
++ item (enum, required) - item definition, ids are always in `item`, additional data (name, ...) are in specific fields (activity, ...)
+    + clProjectItemType
+    + (object)
+        + type (clProjectItemType, required)
+        + activity_id (number, optional)
+        + person_id (number, optional)
+        + task_id (number, optional)
++ hours (enum)
+    + number - short-syntax for updating hours budget
+    + (object)
+        + budget (number)
++ activity (enum)
+    + string - activity name (case insensitive)
+    + (object)
+        + string (number) - activity name (case insensitive)
+        + hourly_rate (number)
++ person (enum)
+    + string - person email
+    + (clPerson) - full person
++ task (enum)
+    + string - task name (case insensitive)
+    + (object)
+        + string - task name (case insensitive)
+
+#### clProjectItemType (enum[string])
++ `activity`
++ `person`
++ `task`
+
+#### clTimeentry (object)
++ uuid (clUuid, optional) - uuid of new timeentry, existing uuid for updating existing timeentry
++ date: `2017-03-28 09:46:00` (clDatetime, required) - start datetime
++ duration: 3600 (number, required) - duration in seconds
++ description (string, optional) - description
++ assignment (object, required)
+    + person_id (number, optional) - authenticated person is used if the id is missing
+    + project_id: 1 (number, required)
+    + activity_id: 1 (number, required) 
+    + task_id (number, optional)
+
+#### clWebhookDelete (object)
++ uuid (clUuid, required)
+
+#### clWebhookCreate (clWebhookDelete)
++ links (object)
+    + webhook (string, required)
+
+#### clWebhookFull (clWebhookCreate)
++ url (string, required)
++ events (clWebhookEvents, required)
+
+#### clWebhookRequest (object)
++ uuid (clUuid, optional) - uuid of new timeentry, existing uuid for updating existing timeentry
++ url (string, required)
++ events (clWebhookEvents, required)
+
+#### clMetaUpsert (object)
++ created: 1 (number, optional) - number of created entities
++ updated: 0 (number, optional) - number of updated entities
+
+#### clWebhookEvents (array)
++ (enum[string])
+    + `timeentries.create`
+    + `timeentries.update`
+    + `projects.create`
+    + `peoplecosts.change`
+
+#### jsonApiResponse (object)
++ `meta` (object, optional) - information about a resource(s), e.g. how many entries were created/updated
++ `data` (array[object], required)) - primary data, e.g webhook(s)
++ `links` (object, optional) - links related to the resource, e.g. link to webhook detail
+
+#### jsonApiErrors (object)
++ errors (array, required) - http://jsonapi.org/examples/#error-objects
+    + (object)
+        + `status`: 400 (number, required)
+        + `title`: `Unauthorized access` (string, required)
+        + `detail`: `Invalid Api-Token` (string, required)
+        + `source` (object, optional)
+            + pointer: `/0/events/0` (string, required)
+
+## REST API v2 [/v2/?about]
+
+The API is REST-based. Responses are JSON, and errors are reported via standard HTTP codes and [json:api errors](http://jsonapi.org/examples/#error-objects). We use authentication with personal access tokens.
+
+### Request [POST /v2/?about]
+
+We accept multiple JSON formats. You can send just one object, many objects in array. 
+Additionaly you can encapsulate request in [json:api `data` field](http://jsonapi.org/format/#document-top-level).
+
+_Notice: examples are always using `data` field with array of objects._
+
++ Request OBJECT (application/json)
+
+    + Body
+    
+            {
+                "date": "2017-03-28 09:46:00",
+                "duration": 3600,
+                "assignment": {
+                    "project_id": 1,
+                    "activity_id": 1
+                }
+            }
+
++ Request OBJECTS_IN_ARRAY (application/json)
+
+    + Body
+    
+            [
+                {
+                    "date": "2017-03-28 09:46:00",
+                    "duration": 3600,
+                    "assignment": {
+                        "project_id": 1,
+                        "activity_id": 1
+                    }
+                }
+            ]
+
++ Request JSONAPI_OBJECT (application/vnd.api+json)
+
+    + Body
+    
+            {
+                "data": {
+                    "date": "2017-03-28 09:46:00",
+                    "duration": 3600,
+                    "assignment": {
+                        "project_id": 1,
+                        "activity_id": 1
+                    }
+                }
+            }
+
++ Request JSONAPI_OBJECTS (application/vnd.api+json)
+
+    + Body
+    
+            {
+                "data": [
+                    {
+                        "uuid": "c85d843e-c2ed-479e-9159-dda5e14177ab",
+                        "description": "Init project",
+                        "date": "2017-03-28 07:57:57",
+                        "duration": 3600,
+                        "assignment": {
+                            "person_id": 1,
+                            "project_id": 1,
+                            "activity_id": 1,
+                            "task_id": 1
+                        }
+                    },
+                    {
+                        "date": "2017-03-28 09:46:00",
+                        "duration": 3600,
+                        "assignment": {
+                            "project_id": 1,
+                            "activity_id": 1
+                        }
+                    }
+                ]
+            }
+
+### Response [GET /v2/?about]
+
+We return [json:api responses](http://jsonapi.org/format/#document-structure). `data` contains raw json response, we aren't using `attributes` or `relationships`.
+
++ Response 400 (application/vnd.api+json)
+
+    + Attributes (jsonApiResponse)
+
+    + Body
+
+            {
+                "meta": {
+                    "created": 1,
+                    "updated": 0
+                },
+                "data": [
+                    {
+                        "uuid": "b0537a3d-ee6e-45d1-8734-2b4cdc00cfb3",
+                        "links": {
+                            "webhook": "https://new.costlocker.com/api-public/v2/webhooks/67be4380-49ff-b8d4-bdf7-3588b59d6e79"
+                        }
+                    }
+                ],
+                "links":{
+                    "documentation":"http://docs.costlocker.apiary.io/",
+                    "authentication":"https://new.costlocker.com/api-token"
+                }
+            }
+
+### Errors [GET /v2/?about]
+
+We return [json:api errors](http://jsonapi.org/examples/#error-objects). [Let us know](https://github.com/costlocker/costlocker.github.io/issues)
+if you get some unclear error. We are dedicated to make errors as human readable as possible.
+
+_Notice: All requests are validated as array of objects. Even if you send one object, you'll get the error `source.pointer` starting with `/0/` (first item in array)._
+
++ Response 400 (application/vnd.api+json)
+
+    + Attributes (jsonApiErrors)
+
+    + Body
+
+            {
+                "errors": [
+                    {
+                        "status": 400,
+                        "title": "Invalid JSON request",
+                        "source": {
+                            "pointer": "/0/url"
+                        },
+                        "detail": "Value \"not a url\" does not match the format \"uri\""
+                    }
+                ]
+            }
+
++ Response 404 (application/vnd.api+json)
+
+    + Attributes (jsonApiErrors)
+
+    + Body
+
+            {
+                "errors": [
+                    {
+                        "status": 404,
+                        "title": "Webhook not found",
+                        "detail": "Webhook 'bfef6a2d-cef4-d55c-97c3-203208177bd1' does not exist, or you are not authorized to see it"
+                    }
+                ]
+            }
+
+## Authentication [/v2/?auth]
+
+### Personal Access Token [GET /v2/?auth]
+
+You can generate an access token that provides API access at https://new.costlocker.com/api-token.
+Whenever you generate a new token, all previous tokens are automatically invalidated.
+
++ Request (text/plain)
+
+    + Attributes
+
+        + app (string, required) - name of your application
+        + token (string, required) - your personal access token from https://new.costlocker.com/api-token
+
+    + Headers
+
+            Authorization:Basic base64(app:token)
+
++ Response 200 (application/vnd.api+json)
+
+        {
+           "links":{
+              "documentation":"http://docs.costlocker.apiary.io/",
+              "authentication":"https://new.costlocker.com/api-token"
+           }
+        }
+
++ Response 403 (application/vnd.api+json)
+
+    + Body
+
+            {
+                "errors": [
+                   {
+                        "status": 403,
+                        "title": "Unauthorized access",
+                        "detail": "Invalid Api-Token"
+                    }
+                ]
+            }
+
++ Response 403 (application/vnd.api+json)
+
+    + Body
+
+            {
+                "errors": [
+                    {
+                        "status": 403,
+                        "title": "Unauthorized access",
+                        "detail": "Missing app_name (username in basic auth)"
+                    }
+                ]
+            }
+
+## Projects [/v2/projects/]
+
+> Work in progress! Right now it's not possible to edit project expenses, billing.
+
+### Create/update projects [POST /v2/projects/]
+
+Everything is upserted. If you sends new client/person/tag/activity we will create new entities.
+You can reference existing entities by ids, name (_case-insensitive_) or object with id/name.
+
+We also recommend using existing projects as template for updating projects.
+We are preparing article about project API. For now, take look at example requests in Apiary.
+
++ Request (application/vnd.api+json)
+
+    + Attributes ()
+        + data (array[clProject], required)
+
+    + Body
+
+            {
+                "data": [
+                    {
+                        "name": "Created project",
+                        "client": "name of client",
+                        "tags": [
+                            "billable"
+                        ]
+                    },
+                    {
+                        "id": 123456,
+                        "name": "Updated project",
+                        "client": 123456,
+                        "dates": {
+                            "date_start": "2017-03-20",
+                            "date_end": "2017-05-20"
+                        },
+                        "responsible_people": [
+                            "existing@example.com",
+                            {
+                                "email": "created@example.com",
+                                "first_name": "Created",
+                                "last_name": "Person",
+                                "role": "ADMIN",
+                                "salary": {
+                                    "payment": "monthly",
+                                    "salary": 10000,
+                                    "hours": 160,
+                                    "date_start": "2017-02-01"
+                                }
+                            }
+                        ],
+                        "items": [
+                            {
+                                "item": {
+                                    "type": "person",
+                                    "activity_id": 123456
+                                },
+                                "hours": {
+                                    "budget": 10
+                                },
+                                "person": {
+                                    "email": "employee@example.com",
+                                    "first_name": "New",
+                                    "last_name": "Employee",
+                                    "role": "EMPLOYEE",
+                                    "salary": {
+                                        "payment": "hourly",
+                                        "hourly_rate": 200
+                                    }
+                                }
+                            },
+                            {
+                                "action": "delete",
+                                "item": "task",
+                                "activity": "Costlocker",
+                                "person": "deleted@example.com",
+                                "task": "existing task name"
+                            },
+                            {
+                                "action": "delete",
+                                "item": {
+                                    "type": "task",
+                                    "activity_id": 123457,
+                                    "person_id": 123456,
+                                    "task_id": 123456
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+
++ Response 200 (application/vnd.api+json)
+
+    + Body
+
+            {
+                "meta": {
+                    "created": 1,
+                    "updated": 1
+                },
+                "data": [
+                    {
+                        "id": "2084",
+                        "links": {
+                            "project": "https://new.costlocker.com/api-public/v2/projects/2084"
+                        }
+                    },
+                    {
+                        "id": "123456",
+                        "links": {
+                            "project": "https://new.costlocker.com/api-public/v2/projects/123456"
+                        }
+                    }
+                ]
+            }
+
++ Response 400 (application/vnd.api+json)
+
+    + Body
+
+            {
+                "errors": [
+                    {
+                        "status": 400,
+                        "title": "Invalid JSON request",
+                        "source": {
+                            "pointer": "/0/name"
+                        },
+                        "detail": "Value null is not a(n) \"string\""
+                    }
+                ]
+            }
+
+### Get projects [GET /v2/projects/]
+
+Alternative display of [projects list from v1](http://docs.costlocker.apiary.io/#reference/0/projects/).
+If you unset `id` you can use it as template for creating a new project.
+
++ Response 200 (application/vnd.api+json)
+
+    + Attributes ()
+        + data (array[clProject], required)
+
+    + Body
+
+            {
+                "data": [
+                    {
+                        "id": "123456",
+                        "name": "Website",
+                        "client": {
+                            "id": "123456",
+                            "name": "Google"
+                        },
+                        "dates": {
+                            "date_start": "2017-03-20",
+                            "date_end": "2017-05-20"
+                        },
+                        "tags": [
+                            {
+                                "name": "Billable"
+                            }
+                        ],
+                        "responsible_people": [
+                            {
+                                "email": "test@example.com",
+                                "first_name": "John",
+                                "last_name": "Doe"
+                            }
+                        ],
+                        "links": {
+                            "project": "https://new.costlocker.com/api-public/v2/projects/123456"
+                        }
+                    }
+                ]
+            }
+
+### Get project detail [GET /v2/projects/{id}]
+
+Returns same project information like in projects list.
+In addition, it returns flat [people costs](http://docs.costlocker.apiary.io/#reference/0/projects-people-costs/).
+
+You can ignore `is_aggregation` object during creating/updating project.
+Such objects are always upserted if they don't exist or their existing hours budget is updated.
+
++ Parameters
+    + id (number, required)
+
++ Response 200 (application/vnd.api+json)
+
+    + Attributes ()
+        + data (clProject, required)
+
+    + Body
+
+            {
+                "data": {
+                    "id": "123456",
+                    "name": "Website",
+                    "client": {
+                        "id": "123456",
+                        "name": "Google"
+                    },
+                    "dates": {
+                        "date_start": "2017-03-20",
+                        "date_end": "2017-05-20"
+                    },
+                    "tags": [
+                        {
+                            "name": "Billable"
+                        }
+                    ],
+                    "responsible_people": [
+                        {
+                            "email": "test@example.com",
+                            "first_name": "John",
+                            "last_name": "Doe"
+                        }
+                    ],
+                    "links": {
+                        "project": "https://new.costlocker.com/api-public/v2/projects/123456"
+                    },
+                    "items": [
+                        {
+                            "item": {
+                                "type": "activity",
+                                "activity_id": "123456"
+                            },
+                            "hours": {
+                                "budget": 40,
+                                "tracked": 0,
+                                "is_aggregation": true
+                            },
+                            "activity": {
+                                "name": "Design",
+                                "hourly_rate": 200
+                            }
+                        },
+                        {
+                            "item": {
+                                "type": "person",
+                                "activity_id": "123456",
+                                "person_id": "123456"
+                            },
+                            "hours": {
+                                "budget": 40,
+                                "tracked": 0,
+                                "is_aggregation": false
+                            },
+                            "person": {
+                                "email": "test@example.com",
+                                "first_name": "John",
+                                "last_name": "Doe"
+                            }
+                        },
+                        {
+                            "item": {
+                                "type": "activity",
+                                "activity_id": "123457"
+                            },
+                            "hours": {
+                                "budget": 20,
+                                "tracked": 0,
+                                "is_aggregation": true
+                            },
+                            "activity": {
+                                "name": "Development",
+                                "hourly_rate": 100
+                            }
+                        },
+                        {
+                            "item": {
+                                "type": "person",
+                                "activity_id": "123457",
+                                "person_id": "123456"
+                            },
+                            "hours": {
+                                "budget": 20,
+                                "tracked": 0,
+                                "is_aggregation": true
+                            },
+                            "person": {
+                                "email": "test@example.com",
+                                "first_name": "John",
+                                "last_name": "Doe"
+                            }
+                        },
+                        {
+                            "item": {
+                                "type": "task",
+                                "activity_id": "123457",
+                                "person_id": "123456",
+                                "task_id": "123456"
+                            },
+                            "hours": {
+                                "budget": 10,
+                                "tracked": 0,
+                                "is_aggregation": false
+                            },
+                            "task": {
+                                "name": "Homepage"
+                            }
+                        },
+                        {
+                            "item": {
+                                "type": "task",
+                                "activity_id": "123457",
+                                "person_id": "123456",
+                                "task_id": "123457"
+                            },
+                            "hours": {
+                                "budget": 10,
+                                "tracked": 0,
+                                "is_aggregation": false
+                            },
+                            "task": {
+                                "name": "Contact form"
+                            }
+                        }
+                    ]
+                }
+            }
+
++ Response 404 (application/vnd.api+json)
+
+    + Body
+
+            {
+                "errors": [
+                    {
+                        "status": 404,
+                        "title": "Project not found",
+                        "detail": "Project '123457' does not exist, or you are not authorized to see it"
+                    }
+                ]
+            }
+
+## Time entries [/v2/timeentries/]
+
+Take a look at integration examples at https://costlocker.github.io/.
+
+### Create/update time entries [POST /v2/timeentries/]
+
++ Request (application/vnd.api+json)
+
+    + Attributes
+        + data (array[clTimeentry], required)
+
+    + Headers
+
+            Authorization:Basic base64(app:token)
+
+    + Body
+    
+            {
+                "data": [
+                    {
+                        "uuid": "c85d843e-c2ed-479e-9159-dda5e14177ab",
+                        "description": "Init project",
+                        "date": "2017-03-28 07:57:57",
+                        "duration": 3600,
+                        "assignment": {
+                            "person_id": 1,
+                            "project_id": 1,
+                            "activity_id": 1,
+                            "task_id": 1
+                        }
+                    },
+                    {
+                        "date": "2017-03-28 09:46:00",
+                        "duration": 3600,
+                        "assignment": {
+                            "project_id": 1,
+                            "activity_id": 1
+                        }
+                    }
+                ]
+            }
+
++ Response 200 (application/vnd.api+json)
+
+    + Attributes
+
+        + meta (clMetaUpsert, required)
+        + data (array[object], required)
+            + uuid (clUuid, required) - uuid of created/updated time-entry
+
+    + Body
+
+            {
+                "meta": {
+                    "created": 1,
+                    "updated": 1
+                },
+                "data": [
+                    {
+                        "uuid": "c85d843e-c2ed-479e-9159-dda5e14177ab"
+                    },
+                    {
+                        "uuid": "b0537a3d-ee6e-45d1-8734-2b4cdc00cfb3"
+                    }
+                ]
+            }
+
++ Response 400 (application/vnd.api+json)
+
+    + Body
+
+            {
+                "errors": [
+                    {
+                        "status": 400,
+                        "title": "Invalid JSON request",
+                        "detail": "Request must be json array, object, or data object"
+                    }
+                ]
+            }
+
++ Response 400 (application/vnd.api+json)
+
+    + Body
+
+            {
+                "errors": [
+                    {
+                        "status": 400,
+                        "title": "Invalid JSON request",
+                        "source": {
+                            "pointer": "/0"
+                        },
+                        "detail": "Required properties missing: [\"date\"]"
+                    },
+                    {
+                        "status": 400,
+                        "title": "Invalid JSON request",
+                        "source": {
+                            "pointer": "/0/duration"
+                        },
+                        "detail": "Value \"long\" is not a(n) \"integer\""
+                    },
+                    {
+                        "status": 400,
+                        "title": "Invalid JSON request",
+                        "source": {
+                            "pointer": "/0/description"
+                        },
+                        "detail": "Value [\"one\",\"two\"] is not a(n) \"string\""
+                    },
+                    {
+                        "status": 400,
+                        "title": "Invalid JSON request",
+                        "source": {
+                            "pointer": "/0/assignment/person_id"
+                        },
+                        "detail": "Failed matching exactly one of the provided schemas."
+                    },
+                    {
+                        "status": 400,
+                        "title": "Invalid JSON request",
+                        "source": {
+                            "pointer": "/0/assignment/project_id"
+                        },
+                        "detail": "Value \"invalid id\" is not a(n) \"integer\""
+                    },
+                    {
+                        "status": 400,
+                        "title": "Invalid JSON request",
+                        "source": {
+                            "pointer": "/0/assignment/activity_id"
+                        },
+                        "detail": "Value null is not a(n) \"integer\""
+                    }
+                ]
+            }
+
+## Webhooks [/v2/webhooks/]
+
+### Create/update webhooks [POST /v2/webhooks/]
+
++ Request (application/vnd.api+json)
+
+    + Attributes
+
+        + data (array[clWebhookRequest], required)
+
+    + Body
+
+            {
+                "data": [
+                    {
+                        "url": "http://example.com",
+                        "events": [
+                            "timeentries.create"
+                        ]
+                    }
+                ]
+            }
+
++ Response 200 (application/vnd.api+json)
+
+    + Attributes ()
+        + meta (clMetaUpsert, required)
+        + data (array[clWebhookCreate], required)
+
+    + Body
+
+            {
+                "meta": {
+                    "created": 1,
+                    "updated": 0
+                },
+                "data": [
+                    {
+                        "uuid": "67be4380-49ff-b8d4-bdf7-3588b59d6e79",
+                        "links": {
+                            "webhook": "https://new.costlocker.com/api-public/v2/webhooks/67be4380-49ff-b8d4-bdf7-3588b59d6e79"
+                        }
+                    }
+                ]
+            }
+
++ Response 400 (application/vnd.api+json)
+
+    + Body
+
+            {
+                "errors": [
+                    {
+                        "status": 400,
+                        "title": "Invalid JSON request",
+                        "source": {
+                            "pointer": "/0/url"
+                        },
+                        "detail": "Value \"not a url\" does not match the format \"uri\""
+                    },
+                    {
+                        "status": 400,
+                        "title": "Invalid JSON request",
+                        "source": {
+                            "pointer": "/0/events/0"
+                        },
+                        "detail": "Value \"unknown event\" is not one of: [\"timeentries.create\",\"timeentries.update\"]"
+                    },
+                    {
+                        "status": 400,
+                        "title": "Invalid JSON request",
+                        "source": {
+                            "pointer": "/0/events"
+                        },
+                        "detail": "Array [\"unknown event\",\"unknown event\"] is not unique."
+                    }
+                ]
+            }
+
+### Get webhooks [GET /v2/webhooks/]
+
++ Response 200 (application/vnd.api+json)
+
+    + Attributes ()
+        + data (array[clWebhookFull], required)
+
+    + Body
+
+            {
+                "data": [
+                    {
+                        "uuid": "67be4380-49ff-b8d4-bdf7-3588b59d6e79",
+                        "url": "http://example.com",
+                        "events": [
+                            "timeentries.create"
+                        ],
+                        "links": {
+                            "webhook": "https://new.costlocker.com/api-public/v2/webhooks/67be4380-49ff-b8d4-bdf7-3588b59d6e79"
+                        }
+                    }
+                ]
+            }
+
+### Get webhook detail [GET /v2/webhooks/{uuid}]
+
++ Parameters
+    + uuid (clUuid, required)
+
++ Response 200 (application/vnd.api+json)
+
+    + Attributes ()
+        + data (clWebhookFull, required)
+
+    + Body
+
+            {
+                "data": {
+                    "uuid": "67be4380-49ff-b8d4-bdf7-3588b59d6e79",
+                    "url": "http://example.com",
+                    "events": [
+                        "timeentries.create"
+                    ],
+                    "links": {
+                        "webhook": "https://new.costlocker.com/api-public/v2/webhooks/67be4380-49ff-b8d4-bdf7-3588b59d6e79"
+                    }
+                }
+            }
+
++ Response 404 (application/vnd.api+json)
+
+    + Body
+
+            {
+                "errors": [
+                    {
+                        "status": 404,
+                        "title": "Webhook not found",
+                        "detail": "Webhook 'bfef6a2d-cef4-d55c-97c3-203208177bd1' does not exist, or you are not authorized to see it"
+                    }
+                ]
+            }
+
+### Get webhook example [GET /v2/webhooks/{uuid}/test]
+
+The returned data format is the same as what we are sending to your `url`.
+Based on [polling url in zappier](https://zapier.com/developer/documentation/v2/rest-hooks/#required-to-go-global-set-a-polling-url).
+
++ Parameters
+    + uuid (clUuid, required)
+
++ Response 200 (application/vnd.api+json)
+
+    + Attributes
+        + meta (object, required)
+            + events (object) - number of event occurences
+        + links (object, required)
+            + webhook (string) - link to webhook resource
+        + data (array[object], required) - aggregated events (one event is represented in one object)
+
+    + Body
+
+            {"meta":{"events":{"timeentries.create":1,"timeentries.update":1,"projects.create":1,"peoplecosts.change":1}},"links":{"webhook":"https://new.costlocker.com/api-public/v2/webhooks/34d3fbc9-133a-4710-b199-babce807a701"},"data":[{"event":"timeentries.create","data":[{"uuid":"9f3c1b5d-4442-4bb5-a734-435e1dc6b6c3","date":"2017-04-20T08:38:14+0000","duration":3600,"description":"Init project","assignment":{"person_id":1,"project_id":1,"activity_id":1,"task_id":1},"names":{"person_fullname":"John Doe","project_name":"Website","client_name":"ACME","activity_name":"Design","task_name":"Homepage"}}]},{"event":"timeentries.update","data":[{"uuid":"5ee96baa-2033-426c-9552-43ac5fe9adba","date":"2017-04-20T08:38:14+0000","duration":3600,"description":"Init project","assignment":{"person_id":1,"project_id":1,"activity_id":1,"task_id":1},"names":{"person_fullname":"John Doe","project_name":"Website","client_name":"ACME","activity_name":"Design","task_name":"Homepage"}}]},{"event":"projects.create","data":[{"id":1,"name":"Website","client":{"id":1,"name":"ACME"},"dates":{"date_start":"2017-04-20","date_end":"2017-05-20"},"tags":[{"name":"Billable"}],"responsible_people":[{"email":"john@example.com","first_name":"John","last_name":"Doe"}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1"}}]},{"event":"peoplecosts.change","data":[{"id":1,"items":[{"action":"upsert","item":{"type":"activity","activity_id":1},"activity":{"name":"Design","hourly_rate":100}},{"action":"upsert","item":{"type":"person","activity_id":1,"person_id":1},"hours":{"budget":20},"person":{"email":"test@example.com","first_name":"Tester","last_name":"Test"},"activity":{"name":"Design"}},{"action":"upsert","item":{"type":"task","activity_id":1,"person_id":1,"task_id":1},"hours":{"budget":20},"person":{"email":"test@example.com","first_name":"Tester","last_name":"Test"},"activity":{"name":"Design"},"task":{"name":"Homepage"}},{"action":"delete","item":{"type":"activity","activity_id":2}},{"action":"delete","item":{"type":"person","activity_id":2,"person_id":2},"hours":{"budget":0}},{"action":"delete","item":{"type":"task","activity_id":2,"person_id":2,"task_id":2},"hours":{"budget":0}}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1"}}]}]}
+
++ Response 404 (application/vnd.api+json)
+
+    + Body
+
+            {
+                "errors": [
+                    {
+                        "status": 404,
+                        "title": "Webhook not found",
+                        "detail": "Webhook 'bfef6a2d-cef4-d55c-97c3-203208177bd1' does not exist, or you are not authorized to see it"
+                    }
+                ]
+            }
+
+### Delete webhook [DELETE /v2/webhooks/{uuid}]
+
++ Parameters
+    + uuid (clUuid, required)
+
++ Response 200 (application/vnd.api+json)
+
+    + Attributes ()
+        + data (array[clWebhookDelete], required)
+
+    + Body
+
+            {
+                "data": [
+                    {
+                        "uuid": "67be4380-49ff-b8d4-bdf7-3588b59d6e79"
+                    }
+                ]
+            }
+
++ Response 404 (application/vnd.api+json)
+
+    + Body
+
+            {
+                "errors": [
+                    {
+                        "status": 404,
+                        "title": "Webhook not found",
+                        "detail": "Webhook 'bfef6a2d-cef4-d55c-97c3-203208177bd1' does not exist, or you are not authorized to see it"
+                    }
+                ]
+            }
+
+
+## SIMPLE API v1 [/v1/]
+
+### POST request [POST /v1/]
 
 * The request is always called over **http://app.costlocker.com/api-public/v1/**.
 * The request consists of a set of **function calls** grouped into a JSON object.
@@ -79,7 +1118,7 @@ HOST: https://app.costlocker.com/api-public/v1
                 "Simple_Timesheet": []
             }
 
-### Legacy GET request [GET /Simple_People]
+### Legacy GET request [GET /v1/Simple_People]
 
 * The request is called over **http://app.costlocker.com/api-public/v1/{function}**.
 * The request **cannot contain** parameters or multiple functions.
@@ -108,9 +1147,9 @@ HOST: https://app.costlocker.com/api-public/v1
                 }
             ]
 
-## People [/Simple_People]
+## People [/v1/Simple_People]
 
-### List of active and inactive people [POST /]
+### List of active and inactive people [POST /v1/]
 
 Legacy `GET https://app.costlocker.com/api-public/v1/Simple_People`
 
@@ -169,9 +1208,9 @@ Legacy `GET https://app.costlocker.com/api-public/v1/Simple_People`
                 ]
             }
 
-## Activities [/Simple_Activities]
+## Activities [/v1/Simple_Activities]
 
-### List of active and inactive activities [POST /]
+### List of active and inactive activities [POST /v1/]
 
 Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Activities`
 
@@ -200,9 +1239,9 @@ Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Activities`
         }
 
 
-## Clients [/Simple_Clients]
+## Clients [/v1/Simple_Clients]
 
-### List of active and inactive clients [POST /]
+### List of active and inactive clients [POST /v1/]
 
 Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Clients`
 
@@ -230,11 +1269,11 @@ Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Clients`
             ]
         }
 
-## Projects [/Simple_Projects]
+## Projects [/v1/Simple_Projects]
 
 Projects are ordered by `id DESC`.
 
-### Filtered projects [POST /]
+### Filtered projects [POST /v1/]
 
 + Request (application/json)
 
@@ -303,7 +1342,7 @@ Projects are ordered by `id DESC`.
                 ]
             }
 
-### List of all ongoing and closed projects [POST /]
+### List of all ongoing and closed projects [POST /v1/]
 
 Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Projects`
 
@@ -367,9 +1406,9 @@ Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Projects`
             }
 
 
-## Projects - Billing [/Simple_Projects_Billing]
+## Projects - Billing [/v1/Simple_Projects_Billing]
 
-### Billing items across ongoing and closed projects [POST /]
+### Billing items across ongoing and closed projects [POST /v1/]
 
 Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Projects_Billing`
 
@@ -403,9 +1442,9 @@ Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Projects_Billing`
 
 
 
-## Projects - People Costs [/Simple_Projects_Ce]
+## Projects - People Costs [/v1/Simple_Projects_Ce]
 
-### Filtered People Costs [POST /]
+### Filtered People Costs [POST /v1/]
 
 + Request (application/json)
 
@@ -476,7 +1515,7 @@ Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Projects_Billing`
             }
 
 
-### People Costs across ongoing and closed projects. [POST /]
+### People Costs across ongoing and closed projects. [POST /v1/]
 
 Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Projects_Ce`
 
@@ -531,9 +1570,9 @@ Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Projects_Ce`
             ]
         }
 
-## Projects - Expenses [/Simple_Projects_Expenses]
+## Projects - Expenses [/v1/Simple_Projects_Expenses]
 
-### Project Expenses across running and finished projects [POST /]
+### Project Expenses across running and finished projects [POST /v1/]
 
 Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Projects_Expenses`
 
@@ -565,9 +1604,9 @@ Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Projects_Expenses`
         }
 
 
-## Timesheet [/Simple_Timesheet]
+## Timesheet [/v1/Simple_Timesheet]
 
-### Filtered entries [POST /]
+### Filtered entries [POST /v1/]
 
 + Request (application/json)
 
@@ -657,7 +1696,7 @@ Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Projects_Expenses`
             ]   
         }
 
-### All entries [POST /]
+### All entries [POST /v1/]
 
 Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Timesheet`
 
@@ -706,9 +1745,9 @@ Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Timesheet`
             ] 
         }
 
-## Tags [/Simple_Tags]
+## Tags [/v1/Simple_Tags]
 
-### List of all tags [POST /]
+### List of all tags [POST /v1/]
 
 Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Tags`
 
