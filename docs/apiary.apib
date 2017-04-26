@@ -1,5 +1,5 @@
 FORMAT: 1A
-HOST: https://app.costlocker.com/api-public
+HOST: https://new.costlocker.com/api-public
 
 # Costlocker API
 
@@ -1076,7 +1076,7 @@ Based on [polling url in zappier](https://zapier.com/developer/documentation/v2/
 
 ### POST request [POST /v1/]
 
-* The request is always called over **http://app.costlocker.com/api-public/v1/**.
+* The request is always called over **http://new.costlocker.com/api-public/v1/**.
 * The request consists of a set of **function calls** grouped into a JSON object.
 * **The called functions** can be combined arbitrarily.
 * The called functions can contain **parameters**.
@@ -1120,7 +1120,7 @@ Based on [polling url in zappier](https://zapier.com/developer/documentation/v2/
 
 ### Legacy GET request [GET /v1/Simple_People]
 
-* The request is called over **http://app.costlocker.com/api-public/v1/{function}**.
+* The request is called over **http://new.costlocker.com/api-public/v1/{function}**.
 * The request **cannot contain** parameters or multiple functions.
 * The data are returned in **raw array** without function name.
 
@@ -1151,7 +1151,7 @@ Based on [polling url in zappier](https://zapier.com/developer/documentation/v2/
 
 ### List of active and inactive people [POST /v1/]
 
-Legacy `GET https://app.costlocker.com/api-public/v1/Simple_People`
+Legacy `GET https://new.costlocker.com/api-public/v1/Simple_People`
 
 + Request (application/json)
      
@@ -1212,7 +1212,7 @@ Legacy `GET https://app.costlocker.com/api-public/v1/Simple_People`
 
 ### List of active and inactive activities [POST /v1/]
 
-Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Activities`
+Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Activities`
 
 + Request (application/json)
      
@@ -1243,7 +1243,7 @@ Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Activities`
 
 ### List of active and inactive clients [POST /v1/]
 
-Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Clients`
+Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Clients`
 
 + Request (application/json)
      
@@ -1344,7 +1344,7 @@ Projects are ordered by `id DESC`.
 
 ### List of all ongoing and closed projects [POST /v1/]
 
-Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Projects`
+Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects`
 
 + Request (application/json)
 
@@ -1410,7 +1410,7 @@ Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Projects`
 
 ### Billing items across ongoing and closed projects [POST /v1/]
 
-Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Projects_Billing`
+Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects_Billing`
 
 + Request (application/json)
      
@@ -1517,7 +1517,7 @@ Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Projects_Billing`
 
 ### People Costs across ongoing and closed projects. [POST /v1/]
 
-Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Projects_Ce`
+Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects_Ce`
 
 + Request (application/json)
      
@@ -1574,7 +1574,7 @@ Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Projects_Ce`
 
 ### Project Expenses across running and finished projects [POST /v1/]
 
-Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Projects_Expenses`
+Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects_Expenses`
 
 + Request (application/json)
      
@@ -1698,7 +1698,7 @@ Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Projects_Expenses`
 
 ### All entries [POST /v1/]
 
-Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Timesheet`
+Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Timesheet`
 
 * `withRates=false` - entries are without rates (client rate, person rate, person overhead)
 * `nonproject=false` - entries with assigned project, no-project entries are ignored
@@ -1749,7 +1749,7 @@ Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Timesheet`
 
 ### List of all tags [POST /v1/]
 
-Legacy `GET https://app.costlocker.com/api-public/v1/Simple_Tags`
+Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Tags`
 
 + Request (application/json)
      
