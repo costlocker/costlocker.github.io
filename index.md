@@ -29,6 +29,7 @@ This is the official repository for [Costlocker API](https://costlocker.com/).
 ## Sample apps
 
 * [Profitability reports generator (PHP)](https://github.com/costlocker/reports) - generate XLSX profitability reports from Costlocker API
+* [Import projects from Harvest (React + PHP)](https://github.com/costlocker/integrations/harvest) - import wizard that uses OAuth2 and Projects API
 
 ## Contributions
 
