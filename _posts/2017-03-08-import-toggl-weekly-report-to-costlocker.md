@@ -185,5 +185,5 @@ If nothing went wrong, you should see identical weekly reports in both Toggl and
 
 ![Costlocker weekly report](https://cloud.githubusercontent.com/assets/7994022/24607626/02cc69d0-1873-11e7-96a9-f73ee84f58ba.png)
 
-**Found a mistake? Is something unclear or the code isn’t working?
+**Did you find a mistake? Is something unclear or isn't the code working?
 [Help us to improve the article](https://github.com/costlocker/costlocker.github.io/issues)!**

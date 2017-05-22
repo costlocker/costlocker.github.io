@@ -114,5 +114,5 @@ Or test your message in [Message Builder](https://api.slack.com/docs/messages/bu
 
 ![Slack message preview](https://cloud.githubusercontent.com/assets/26380189/24649765/700b1c7a-1928-11e7-9753-0445bb7dddbc.png)
 
-**Did you find a mistake? Is something unclear or the code isn't working?
+**Did you find a mistake? Is something unclear or isn't the code working?
 [Help us to improve the article](https://github.com/costlocker/costlocker.github.io/issues)!**

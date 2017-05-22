@@ -1,6 +1,6 @@
 ---
 title: "Import projects to Costlocker"
-perex: "Automate managing Costlocker projects via API v2"
+perex: "Automate Costlocker projects management via API v2"
 date: 2017-05-14 10:00:00 +0100
 image: https://cloud.githubusercontent.com/assets/7994022/26050527/43dbc29c-395f-11e7-9902-4585f9f7f463.png
 links:
@@ -10,27 +10,27 @@ links:
   Import Harvest projects (source code): https://github.com/costlocker/integrations/harvest
 ---
 
-Are you using Harvest, Teamwork, JIRA, Asana, Toggl, &hellip; but you are missing
-some functionality like profits, revenues, &hellip;?
-Costlocker is now able to create and update projects via API.
+Are you using Harvest, Teamwork, JIRA, Asana, Toggl, &hellip; but missing
+some functionality like profits, revenues, etc&hellip;?
+Costlocker is now able to create and update projects via its API.
 
-* [Projects API introduction](#projects-api-introduction)
-* [_Project items_](#items) - [people costs (activity, person, task)](#people-costs),
+* [Project API introduction](#project-api-introduction)
+* [_Project items_](#items) - [personnel costs (activity, person, task)](#personnel-costs),
   [project expenses](#project-expenses), [discount](#discount), [billing](#billing)
 * [API shortcuts](#api-shortcuts)
 * [_Demo_ - Import projects from Harvest](#demo-import-projects-from-harvest)
 
-## Projects API introduction
+## Project API introduction
 
-We tried to unify project structure as much as possible.
-If you're get familiar with 
+We tried to unify the project structure as much as possible.
+If you're familiar with 
 [/api-public/v2/projects/ endpoint](http://docs.costlocker.apiary.io/#reference/0/projects)
 it should be simple to execute any operation with project.
 
 ### Project detail
 
-Basic information about projects are available in classic json.
-More advanced concepts (people costs, billing, &hellip;) are defined in [`items`](#items).
+Basic project information is available in the standard json format.
+More advanced concepts (personnel costs, billing, &hellip;) are defined in [`items`](#items).
 
 ```
 {
@@ -49,13 +49,13 @@ More advanced concepts (people costs, billing, &hellip;) are defined in [`items`
 
 ### Items
 
-Field `items` is used for defining people costs, project expenses, billing and discount.
-Returned item has always same format:
+Field `items` are used for defining personnel costs, project expenses, billing and discount.
+The returned item is always of the same format:
 
-* `item` contains `type` and Costlocker ids
-* item is described in remaining fields (typically you have `<entity>_id` in `item` and detail in `<entity>` field)
-* response after creating/updating projects contains only `item` (_you can use returned ids for storing mapping information_)
-* `action` is optional, by default `upsert` operation is used. You can use `delete` action for deleting item
+* The `item` contains `type` and Costlocker ids
+* The item is described in remaining fields (typically, there is `<entity>_id` in the `item` and the detail in the `<entity>` field)
+* The response after creating or updating projects contains only the `item` (_you can use returned ids for storing mapping information_)
+* The `action` is optional, the `upsert` operation is used by default. You can use the `delete` action to delete any items
 
 ```json
 {
@@ -81,16 +81,16 @@ Returned item has always same format:
 }
 ```
 
-## People costs
+## Personnel costs
 
-You can define an activity, a person and a task. But we recommend to create just _leafs_.
-Activity budget is aggregation of person budgets. Person budget is aggregation of tasks.
-So you can just create the leaf and activity/person is upserted.
+You can define an activity, a person and a task. We recommend to create just _leafs_ though.
+Activity budget represents an aggregation of personal budgets. The personal budget is an aggregation of tasks.
+This way, you can just create the leaf and the activity/person is upserted.
 
 ### Activity
 
-Every activity has name and hourly rate. Existing client rate is used if `hourly_rate` is missing.
-Zero rate is used, if you create a new activity without hourly rate.
+Every activity has a name and an hourly rate. The existing client rate is used if the `hourly_rate` is missing.
+If you create a new activity without an hourly rate, zero rate is used.
 
 ```json
 {
@@ -106,8 +106,8 @@ Zero rate is used, if you create a new activity without hourly rate.
 
 ### Person
 
-You must specify email, names, role and salary for new persons.
-Role, salary and names are used only for creating new person. _Existing person is never updated!_
+It is necessary to specify the email, names, role and salary for every new person.
+The role, salary and names are used only when creating a new person. _An existing person is never updated!_
 
 ```
 {
@@ -136,12 +136,12 @@ Role, salary and names are used only for creating new person. _Existing person i
 }
 ```
 
-_Same person definition can be used in `responsible_people` field._
+_The same person definition can be used in `responsible_people` field._
 
 ### Task
 
-Task is assigned to person and activity. Parent can be referenced by ids in `item`
-or by name/email in relevant field. References are also described in [shortcuts](#api-shortcuts).
+Tasks are assigned to a person and activity. A parent can be referenced by ids in the `item`
+ or by a name/email in the relevant field. References are also described in [shortcuts](#api-shortcuts).
 
 ```
 {
@@ -171,7 +171,7 @@ or by name/email in relevant field. References are also described in [shortcuts]
 
 ## Project expenses
 
-Partial updates are supported, take a look at example in [billing](#billing)
+Partial updates are supported. Please see the example in [billing](#billing).
 
 ```json
 {
@@ -194,7 +194,7 @@ Partial updates are supported, take a look at example in [billing](#billing)
 
 ## Discount
 
-Every project has one discount. No ids are used, you are just setting an amount
+Every project has one discount. No ids are used, there is only one amount that needs to be adjusted.
 
 ```json
 {
@@ -209,7 +209,7 @@ Every project has one discount. No ids are used, you are just setting an amount
 
 ## Billing
 
-Be aware that revenue (_people costs + project expenses - discount_) cannot be smaller than billing
+Be aware that revenue (_personnel costs + project expenses - discount_) cannot be smaller than billing.
 
 ```json
 {
@@ -220,12 +220,12 @@ Be aware that revenue (_people costs + project expenses - discount_) cannot be s
         "description": "INV201705150001",
         "total_amount": 900,
         "date": "2017-05-15",
-        "status": "issued"
+        "status": "draft"
     }
 }
 ```
 
-You can do partial update, like changing billing status without modifying amount&hellip;
+You can execute partial updates, such as changing the billing status without modifying the amount&hellip;
 
 ```
 {
@@ -234,7 +234,7 @@ You can do partial update, like changing billing status without modifying amount
         "billing_id": 123456
     },
     "billing": {
-        "status": "invoiced"
+        "status": "sent"
     }
 }
 ```
@@ -243,9 +243,9 @@ You can do partial update, like changing billing status without modifying amount
 
 ## API shortcuts
 
-You can use shortcuts when you are creating new project or experimenting with the API.
-Take it as experimental feature for developers. If you don't like it you can use
-standard format returned by the API.
+You can use shortcuts when creating a new project or experimenting with the API.
+This is an experimental feature for developers. If you don’t like it, you can use 
+the standard formats returned by the API.
 
 | Shortcut | Full representation | Description |
 | -------- | ------------------- | ----------- |
@@ -258,7 +258,7 @@ standard format returned by the API.
 | `tag` | `tag.id` or `rag.name` | Tag referenced by id or name |
 
 
-Let's say that you want to create a new task for existing person:
+Let's say you want to create a new task for an existing person:
 
 ```json
 {
@@ -288,8 +288,8 @@ Let's say that you want to create a new task for existing person:
 }
 ```
 
-Be aware that shortcuts are used only in requests.
-Response always contains standard `item` definition.
+Be aware that shortcuts are only used in requests.
+A response always contains standard `item` definition.
 
 ```json
 {
@@ -314,11 +314,11 @@ We've built _Harvest projects importer_ during development of the new API, try i
 [http://integrations.costlocker.com](http://integrations.costlocker.com)
 ([source code](https://github.com/costlocker/integrations/harvest)).
 
-**Let us know if you've created similar application that connects Costlocker with a project management tool!**
+**Let us know if you've created similar application that connects Costlocker to a project management tool!**
 
 ![Import harvest projects to Costlocker](https://cloud.githubusercontent.com/assets/7994022/26050527/43dbc29c-395f-11e7-9902-4585f9f7f463.png)
 
 ---
 
-**Did you find a mistake? Is something unclear or the code isn't working?
+**Did you find a mistake? Is something unclear or isn't the code working?
 [Help us to improve the article](https://github.com/costlocker/costlocker.github.io/issues)!**
