@@ -47,6 +47,9 @@ Take a look at an app for [importing projects from Harvest](http://integrations.
 * create/update **projects** (project expenses, discount, billing)
 * basic information about **user and authorized applications**
 * improve DX (accepted date/time format, error messages for forbidden actions)
+* **restrict authorization**
+    * OAuth2 or personal access token cannot be used for authorizing at `app.costlocker.com`
+    * restrict [Simple API](#reference/0/simple-api-v1) for employees and managers authorized by OAuth2 or personal access token
 
 ### Data Structures
 
@@ -1505,6 +1508,9 @@ Based on [polling url in zappier](https://zapier.com/developer/documentation/v2/
 
 
 ## SIMPLE API v1 [/v1/]
+
+**Employee/manager has restricted access!**
+They cannot see all projects and timesheets, salaries, rates, revenues, billing etc..
 
 ### POST request [POST /v1/]
 
