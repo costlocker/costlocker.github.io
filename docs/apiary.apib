@@ -51,6 +51,10 @@ Take a look at an app for [importing projects from Harvest](http://integrations.
     * OAuth2 or personal access token cannot be used for authorizing at `app.costlocker.com`
     * restrict [Simple API](#reference/0/simple-api-v1) for employees and managers authorized by OAuth2 or personal access token
 
+#### _June 2017_
+
+* add attributes `state` and `project_id` to projects, filter projects by `state`
+
 ### Data Structures
 
 #### clUuid (string, optional) - `87d2a4e5-5a2e-413d-ab4b-5b3771cc03c1`
@@ -66,6 +70,7 @@ Take a look at an app for [importing projects from Harvest](http://integrations.
 #### clProject (object)
 + id (number, optional)
 + name (string, required)
++ state (clProjectState, optional)
 + client (enum, required)
     + string - client name (case insensitive)
     + number - client id
@@ -75,6 +80,9 @@ Take a look at an app for [importing projects from Harvest](http://integrations.
 + dates (object, optional)
     + date_start (clLiberalDate, required)
     + date_end (clLiberalDate, required)
++ project_id (object, optional)
+    + id (string, optional)
+    + is_generated: false (boolean, optional)
 + tags (array, optional)
     + (enum)
         + string - tag name (case insensitive)
@@ -160,6 +168,10 @@ Take a look at an app for [importing projects from Harvest](http://integrations.
 + `billing`
 + `expense`
 + `discount`
+
+#### clProjectState (enum[string])
++ `running`
++ `finished`
 
 #### clTimeentry (object)
 + uuid (clUuid, optional) - uuid of new timeentry, existing uuid for updating existing timeentry
@@ -875,10 +887,15 @@ Take look at example requests in Apiary or check
                 ]
             }
 
-### Get projects [GET /v2/projects/]
+### Get projects [GET /v2/projects/{?state}]
 
 Alternative display of [projects list from v1](http://docs.costlocker.apiary.io/#reference/0/projects/).
 If you unset `id` you can use it as template for creating a new project.
+
++ Parameters
+    + state (clProjectState, optional)
+        + running
+        + finished
 
 + Response 200 (application/vnd.api+json)
 
@@ -892,6 +909,7 @@ If you unset `id` you can use it as template for creating a new project.
                     {
                         "id": "123456",
                         "name": "Website",
+                        "state": "running",
                         "client": {
                             "id": "123456",
                             "name": "Google"
@@ -899,6 +917,10 @@ If you unset `id` you can use it as template for creating a new project.
                         "dates": {
                             "date_start": "2017-03-20",
                             "date_end": "2017-05-20"
+                        },
+                        "project_id": {
+                            "id": null,
+                            "is_generated": false
                         },
                         "tags": [
                             {
@@ -955,6 +977,7 @@ Such objects are always upserted if they don't exist or their existing hours bud
                 "data": {
                     "id": "123456",
                     "name": "Website",
+                    "state": "running",
                     "client": {
                         "id": "123456",
                         "name": "Google"
@@ -962,6 +985,10 @@ Such objects are always upserted if they don't exist or their existing hours bud
                     "dates": {
                         "date_start": "2017-03-20",
                         "date_end": "2017-05-20"
+                    },
+                    "project_id": {
+                        "id": null,
+                        "is_generated": false
                     },
                     "tags": [
                         {
@@ -1456,7 +1483,7 @@ Based on [polling url in zappier](https://zapier.com/developer/documentation/v2/
 
     + Body
 
-            {"meta":{"events":{"timeentries.create":1,"timeentries.update":1,"projects.create":1,"peoplecosts.change":1,"expenses.change":1,"billing.change":1}},"links":{"webhook":{"webhook":"https://new.costlocker.com/api-public/v2/webhooks/dd76b5e0-5b74-4a68-b0ad-db6efbed7b9c","example":"https://new.costlocker.com/api-public/v2/webhooks/dd76b5e0-5b74-4a68-b0ad-db6efbed7b9c/test"}},"data":[{"event":"timeentries.create","data":[{"uuid":"b000bbe4-e2e9-4d89-9c29-e90497a354a0","date":"2017-05-10 04:49:24","duration":3600,"description":"Init project","assignment":{"person_id":1,"project_id":1,"activity_id":1,"task_id":1},"names":{"person_fullname":"John Doe","project_name":"Website","client_name":"ACME","activity_name":"Design","task_name":"Homepage"}}]},{"event":"timeentries.update","data":[{"uuid":"1fb17dd0-0d7c-4ded-9906-9f919985c829","date":"2017-05-10 04:49:24","duration":3600,"description":"Init project","assignment":{"person_id":1,"project_id":1,"activity_id":1,"task_id":1},"names":{"person_fullname":"John Doe","project_name":"Website","client_name":"ACME","activity_name":"Design","task_name":"Homepage"}}]},{"event":"projects.create","data":[{"id":1,"name":"Website","client":{"id":1,"name":"ACME"},"dates":{"date_start":"2017-05-10","date_end":"2017-06-10"},"tags":[{"name":"Billable"}],"responsible_people":[{"email":"john@example.com","first_name":"John","last_name":"Doe"}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]},{"event":"peoplecosts.change","data":[{"id":1,"items":[{"action":"upsert","item":{"type":"activity","activity_id":1},"activity":{"name":"Design","hourly_rate":100}},{"action":"upsert","item":{"type":"person","activity_id":1,"person_id":1},"hours":{"budget":20},"person":{"email":"test@example.com","first_name":"Tester","last_name":"Test"},"activity":{"name":"Design"}},{"action":"upsert","item":{"type":"task","activity_id":1,"person_id":1,"task_id":1},"hours":{"budget":20},"person":{"email":"test@example.com","first_name":"Tester","last_name":"Test"},"activity":{"name":"Design"},"task":{"name":"Homepage"}},{"action":"delete","item":{"type":"activity","activity_id":2}},{"action":"delete","item":{"type":"person","activity_id":2,"person_id":2},"hours":{"budget":0}},{"action":"delete","item":{"type":"task","activity_id":2,"person_id":2,"task_id":2},"hours":{"budget":0}}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]},{"event":"expenses.change","data":[{"id":1,"items":[{"action":"upsert","item":{"type":"expense","expense_id":1},"expense":{"description":"Invision license","purchased":{"total_amount":2000,"date":"2017-03-28"},"billed":{"total_amount":1000}}},{"action":"delete","item":{"type":"expense","expense_id":2}}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]},{"event":"billing.change","data":[{"id":1,"items":[{"action":"upsert","item":{"type":"billing","billing_id":1},"billing":{"description":"Invoice 2017000019","total_amount":1000,"date":"2017-04-01","status":"sent"}},{"action":"delete","item":{"type":"billing","billing_id":2}}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]}]}
+            {"meta":{"events":{"timeentries.create":1,"timeentries.update":1,"projects.create":1,"peoplecosts.change":1,"expenses.change":1,"billing.change":1}},"links":{"webhook":{"webhook":"https://new.costlocker.com/api-public/v2/webhooks/dd76b5e0-5b74-4a68-b0ad-db6efbed7b9c","example":"https://new.costlocker.com/api-public/v2/webhooks/dd76b5e0-5b74-4a68-b0ad-db6efbed7b9c/test"}},"data":[{"event":"timeentries.create","data":[{"uuid":"139fce1b-c243-4890-b328-ec5d8394e073","date":"2017-06-09 09:53:06","duration":3600,"description":"Init project","assignment":{"person_id":1,"project_id":1,"activity_id":1,"task_id":1},"names":{"person_fullname":"John Doe","project_name":"Website","client_name":"ACME","activity_name":"Design","task_name":"Homepage"}}]},{"event":"timeentries.update","data":[{"uuid":"e74dd664-ac42-473c-beae-e3081640c7a9","date":"2017-06-09 09:53:06","duration":3600,"description":"Init project","assignment":{"person_id":1,"project_id":1,"activity_id":1,"task_id":1},"names":{"person_fullname":"John Doe","project_name":"Website","client_name":"ACME","activity_name":"Design","task_name":"Homepage"}}]},{"event":"projects.create","data":[{"id":1,"name":"Website","state":"running","client":{"id":1,"name":"ACME"},"dates":{"date_start":"2017-06-09","date_end":"2017-07-09"},"project_id":{"id":null,"is_generated":false},"tags":[{"name":"Billable"}],"responsible_people":[{"email":"john@example.com","first_name":"John","last_name":"Doe"}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]},{"event":"peoplecosts.change","data":[{"id":1,"items":[{"action":"upsert","item":{"type":"activity","activity_id":1},"activity":{"name":"Design","hourly_rate":100}},{"action":"upsert","item":{"type":"person","activity_id":1,"person_id":1},"hours":{"budget":20},"person":{"email":"test@example.com","first_name":"Tester","last_name":"Test"},"activity":{"name":"Design"}},{"action":"upsert","item":{"type":"task","activity_id":1,"person_id":1,"task_id":1},"hours":{"budget":20},"person":{"email":"test@example.com","first_name":"Tester","last_name":"Test"},"activity":{"name":"Design"},"task":{"name":"Homepage"}},{"action":"delete","item":{"type":"activity","activity_id":2}},{"action":"delete","item":{"type":"person","activity_id":2,"person_id":2},"hours":{"budget":0}},{"action":"delete","item":{"type":"task","activity_id":2,"person_id":2,"task_id":2},"hours":{"budget":0}}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]},{"event":"expenses.change","data":[{"id":1,"items":[{"action":"upsert","item":{"type":"expense","expense_id":1},"expense":{"description":"Invision license","purchased":{"total_amount":2000,"date":"2017-03-28"},"billed":{"total_amount":1000}}},{"action":"delete","item":{"type":"expense","expense_id":2}}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]},{"event":"billing.change","data":[{"id":1,"items":[{"action":"upsert","item":{"type":"billing","billing_id":1},"billing":{"description":"Invoice 2017000019","total_amount":1000,"date":"2017-04-01","status":"sent"}},{"action":"delete","item":{"type":"billing","billing_id":2}}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]}]}
 
 + Response 404 (application/vnd.api+json)
 
