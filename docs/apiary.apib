@@ -41,7 +41,7 @@ enabling you to integrate Costlocker with other products you or your company use
 #### _May 2017_
 
 We've enabled integrations for 3rd party applications via OAuth2.
-Take a look at an app for [importing projects from Harvest](http://integrations.costlocker.com/).
+Take a look at an app for [importing projects from Harvest](https://harvest.integrations.costlocker.com/).
 
 * authenticate with **OAuth2**
 * create/update **projects** (project expenses, discount, billing)
@@ -54,6 +54,20 @@ Take a look at an app for [importing projects from Harvest](http://integrations.
 #### _June 2017_
 
 * add attributes `state` and `project_id` to projects, filter projects by `state`
+* add webhook signature [`X-Hook-Signature`](/#reference/0/webhooks/get-webhook-example)
+* add enabled addons to [`company`](/#reference/0/me/user-detail)
+* **Simple API** - filter billing and expenses by `project`, filter projects by `state`, include `recurring` projects
+
+#### _July 2017_
+
+* add `recent_deliveries` to [webhook detail](/#reference/0/webhooks/get-webhook-detail)
+* fix `date` format in `timeentries` event (`2017-03-28T09:46:00+0000`)
+* [interactive webhooks manager](https://webhooks.integrations.costlocker.com/)
+
+#### _August 2017_
+
+* enable/disable webhook via [`is_enabled`](/#reference/0/webhooks)
+* fix ordering [`peoplecosts` in project detail](/#reference/0/projects/get-project-detail) and [`Simple_Projects_Ce`](/#reference/0/projects-people-costs/filtered-people-costs)
 
 ### Data Structures
 
@@ -175,7 +189,7 @@ Take a look at an app for [importing projects from Harvest](http://integrations.
 
 #### clTimeentry (object)
 + uuid (clUuid, optional) - uuid of new timeentry, existing uuid for updating existing timeentry
-+ date: `2017-03-28 09:46:00` (clLiberalDate, required) - start datetime
++ date: `2017-03-28T09:46:00+0000` (clLiberalDate, required) - start datetime
 + duration: 3600 (number, required) - duration in seconds
 + description (string, optional) - description
 + assignment (object, required)
@@ -193,11 +207,26 @@ Take a look at an app for [importing projects from Harvest](http://integrations.
 
 #### clWebhookFull (clWebhookCreate)
 + url (string, required)
++ is_enabled (boolean, optional)
 + events (clWebhookEvents, required)
+
+#### clWebhookDetail (clWebhookFull)
++ recent_deliveries (array, required)
+    + (object)
+        + date: `2017-03-28T09:46:00+0000` (string, required)
+        + request (object)
+            + url (string)
+            + headers (object)
+            + body (object)
+        + response (object)
+            + status_code (number)
+            + headers (object)
+            + duration (number)
 
 #### clWebhookRequest (object)
 + uuid (clUuid, optional) - uuid of new timeentry, existing uuid for updating existing timeentry
 + url (string, required)
++ is_enabled (boolean, optional)
 + events (clWebhookEvents, required)
 
 #### clMetaUpsert (object)
@@ -395,6 +424,8 @@ Roles are defined in [Costlocker web app](https://new.costlocker.com).
 You can generate an access token that provides API access at https://new.costlocker.com/api-token.
 Whenever you generate a new token, all previous tokens are automatically invalidated.
 
+Use your app name and personal token in Authorization header: `Authorization:Basic base64(app:token)`.
+
 + Request (text/plain)
 
     + Attributes
@@ -504,6 +535,12 @@ _**Scopes:** every role has access to `/me` endpoints._
 
 Basic information about current user and company.
 
++ Request
+
+    + Headers
+
+            Authorization: _check_authentication_section_
+
 + Response 200 (application/vnd.api+json)
 
     + Body
@@ -518,7 +555,8 @@ Basic information about current user and company.
                     },
                     "company": {
                         "id": 1,
-                        "name": "ACME"
+                        "name": "ACME",
+                        "addons": []
                     },
                     "links": {
                         "tokens": "https://new.costlocker.com/api-public/v2/me/tokens"
@@ -530,6 +568,12 @@ Basic information about current user and company.
 
 List of active applications (tokens)
 that are able to access Costlocker API.
+
++ Request
+
+    + Headers
+
+            Authorization: _check_authentication_section_
 
 + Response 200 (application/vnd.api+json)
 
@@ -609,6 +653,12 @@ that are able to access Costlocker API.
 + Parameters
     + app: `Harvest Importer` (string, required) - name of the revoked authorized app
 
++ Request
+
+    + Headers
+
+            Authorization: _check_authentication_section_
+
 + Response 200 (application/vnd.api+json)
 
     + Body
@@ -652,6 +702,10 @@ Take look at example requests in Apiary or check
 [our blog about Projects API](https://costlocker.github.io/blog/2017-05-14-import-projects-to-costlocker.html)
 
 + Request (application/vnd.api+json)
+
+    + Headers
+
+            Authorization: _check_authentication_section_
 
     + Attributes ()
         + data (array[clProject], required)
@@ -897,6 +951,12 @@ If you unset `id` you can use it as template for creating a new project.
         + running
         + finished
 
++ Request
+
+    + Headers
+
+            Authorization: _check_authentication_section_
+
 + Response 200 (application/vnd.api+json)
 
     + Attributes ()
@@ -965,6 +1025,12 @@ Such objects are always upserted if they don't exist or their existing hours bud
         + expenses
         + discounts
         + `expenses,billing` - you can combine multiple types
+
++ Request
+
+    + Headers
+
+            Authorization: _check_authentication_section_
 
 + Response 200 (application/vnd.api+json)
 
@@ -1176,7 +1242,7 @@ entries from other persons._
 
     + Headers
 
-            Authorization:Basic base64(app:token)
+            Authorization: _check_authentication_section_
 
     + Body
     
@@ -1321,9 +1387,18 @@ with batching, fat payloads, three retries (_retry after 1, 5, and 15 minutes_),
 
 _**Scopes:** Only ADMIN and OWNER can manage webhooks from a company._
 
+You can try and manage webhooks at https://webhooks.integrations.costlocker.com/.
+
 ### Create/update webhooks [POST /v2/webhooks/]
 
+Webhooks are created if `uuid` is NOT specified, otherwise webhooks are upserted
+(create a new webhook, or update an existing webhook).
+
 + Request (application/vnd.api+json)
+
+    + Headers
+
+            Authorization: _check_authentication_section_
 
     + Attributes
 
@@ -1334,7 +1409,16 @@ _**Scopes:** Only ADMIN and OWNER can manage webhooks from a company._
             {
                 "data": [
                     {
-                        "url": "http://example.com",
+                        "url": "http://create.com",
+                        "is_enabled": true,
+                        "events": [
+                            "timeentries.create"
+                        ]
+                    },
+                    {
+                        "uuid": "e479ef4e-fe29-45c2-a119-5298538c4caa",
+                        "url": "http://update.com",
+                        "is_enabled": false,
                         "events": [
                             "timeentries.create"
                         ]
@@ -1401,6 +1485,12 @@ _**Scopes:** Only ADMIN and OWNER can manage webhooks from a company._
 
 ### Get webhooks [GET /v2/webhooks/]
 
++ Request
+
+    + Headers
+
+            Authorization: _check_authentication_section_
+
 + Response 200 (application/vnd.api+json)
 
     + Attributes ()
@@ -1413,6 +1503,7 @@ _**Scopes:** Only ADMIN and OWNER can manage webhooks from a company._
                     {
                         "uuid": "67be4380-49ff-b8d4-bdf7-3588b59d6e79",
                         "url": "http://example.com",
+                        "is_enabled": true,
                         "events": [
                             "timeentries.create"
                         ],
@@ -1426,29 +1517,25 @@ _**Scopes:** Only ADMIN and OWNER can manage webhooks from a company._
 
 ### Get webhook detail [GET /v2/webhooks/{uuid}]
 
+The detail contains the 20 most recent delivered webhooks in `recent_deliveries`, sorted with the most recent first.
+
 + Parameters
     + uuid (clUuid, required)
+
++ Request
+
+    + Headers
+
+            Authorization: _check_authentication_section_
 
 + Response 200 (application/vnd.api+json)
 
     + Attributes ()
-        + data (clWebhookFull, required)
+        + data (clWebhookDetail, required)
 
     + Body
 
-            {
-                "data": {
-                    "uuid": "67be4380-49ff-b8d4-bdf7-3588b59d6e79",
-                    "url": "http://example.com",
-                    "events": [
-                        "timeentries.create"
-                    ],
-                    "links": {  
-                        "webhook":"https://new.costlocker.com/api-public/v2/webhooks/dd76b5e0-5b74-4a68-b0ad-db6efbed7b9c",
-                        "example":"https://new.costlocker.com/api-public/v2/webhooks/dd76b5e0-5b74-4a68-b0ad-db6efbed7b9c/test"
-                    }
-                }
-            }
+            {"data":{"uuid":"530c5330-1a39-1db0-eac5-3d1423ffba1f","url":"https://httpbin.org/status/410","is_enabled": true,"events":["timeentries.create","projects.create","peoplecosts.change","expenses.change","billing.change"],"recent_deliveries":[{"date":"2017-07-20T07:41:35+0000","request":{"url":"https://httpbin.org/status/410","headers":{"Content-Type":"application/json","X-Hook-Signature":"sha256=7051d74a699a3a48302adb1ddc99699f862012d5a7354ae8f580a5bd84c94e93"},"body":{"meta":{"events":{"timeentries.create":1}},"links":{"webhook":{"webhook":"https://new.costlocker.com/api-public/v2/webhooks/530c5330-1a39-1db0-eac5-3d1423ffba1f","example":"https://new.costlocker.com/api-public/v2/webhooks/530c5330-1a39-1db0-eac5-3d1423ffba1f/test"}},"data":[{"event":"timeentries.create","data":[{"uuid":"4d33d8f7-bb41-4956-a153-88ff2e7b7e9b","date":"2017-07-20T07:40:14+0000","duration":3600,"description":"testCreateValidJson","assignment":{"person_id":123456,"project_id":123456,"activity_id":123456,"task_id":null},"names":{"person_fullname":"Tester Test","project_name":"Tests","client_name":"Kamil","activity_name":"Costlocker","task_name":null}}]}]}},"response":{"status_code":410,"headers":{"Connection":"keep-alive","Server":"meinheld/0.6.1","Date":"Thu, 20 Jul 2017 07:41:10 GMT","Content-Type":"text/html; charset=utf-8","Access-Control-Allow-Origin":"*","Access-Control-Allow-Credentials":"true","X-Powered-By":"Flask","X-Processed-Time":"0.000495910644531","Content-Length":"0","Via":"1.1 vegur"},"duration":0.833100080490112}}],"links":{"webhook":"https://new.costlocker.com/api-public/v2/webhooks/530c5330-1a39-1db0-eac5-3d1423ffba1f","example":"https://new.costlocker.com/api-public/v2/webhooks/530c5330-1a39-1db0-eac5-3d1423ffba1f/test"}}}
 
 + Response 404 (application/vnd.api+json)
 
@@ -1469,8 +1556,23 @@ _**Scopes:** Only ADMIN and OWNER can manage webhooks from a company._
 The returned data format is the same as what we are sending to your `url`.
 Based on [polling url in zappier](https://zapier.com/developer/documentation/v2/rest-hooks/#required-to-go-global-set-a-polling-url).
 
+Costlocker also signs webhook requests so you can optionally [verify that they originated from Costlocker](https://gist.github.com/costlockerbot/314aaf809c7a6f42dd33e8524fac5442).
+The header `X-Hook-Signature` is a HMAC-SHA256 hash of the request body. The hash signature starts with used algorithm (`sha256=`).
+The key used to sign this text is `client_secret` or `personal access token` used when the webhook was created
+(_or updated if you've created the webhook before adding support for signatures_).
+
+You can use `X-Hook-Signature` for detecting duplicite events.
+When we don't get a response in 10 seconds timeout, we'll retry to send the webhook.
+But you could already processed the webhook. In that case you might ignore the second call.
+
 + Parameters
     + uuid (clUuid, required)
+
++ Request
+
+    + Headers
+
+            Authorization: _check_authentication_section_
 
 + Response 200 (application/vnd.api+json)
 
@@ -1481,9 +1583,13 @@ Based on [polling url in zappier](https://zapier.com/developer/documentation/v2/
             + webhook (string) - link to webhook resource
         + data (array[object], required) - aggregated events (one event is represented in one object)
 
+    + Headers
+        
+            X-Hook-Signature: sha256=198_hash_from_request_body_signed_by_client_secret_or_personal_token_5f7
+
     + Body
 
-            {"meta":{"events":{"timeentries.create":1,"timeentries.update":1,"projects.create":1,"peoplecosts.change":1,"expenses.change":1,"billing.change":1}},"links":{"webhook":{"webhook":"https://new.costlocker.com/api-public/v2/webhooks/dd76b5e0-5b74-4a68-b0ad-db6efbed7b9c","example":"https://new.costlocker.com/api-public/v2/webhooks/dd76b5e0-5b74-4a68-b0ad-db6efbed7b9c/test"}},"data":[{"event":"timeentries.create","data":[{"uuid":"139fce1b-c243-4890-b328-ec5d8394e073","date":"2017-06-09 09:53:06","duration":3600,"description":"Init project","assignment":{"person_id":1,"project_id":1,"activity_id":1,"task_id":1},"names":{"person_fullname":"John Doe","project_name":"Website","client_name":"ACME","activity_name":"Design","task_name":"Homepage"}}]},{"event":"timeentries.update","data":[{"uuid":"e74dd664-ac42-473c-beae-e3081640c7a9","date":"2017-06-09 09:53:06","duration":3600,"description":"Init project","assignment":{"person_id":1,"project_id":1,"activity_id":1,"task_id":1},"names":{"person_fullname":"John Doe","project_name":"Website","client_name":"ACME","activity_name":"Design","task_name":"Homepage"}}]},{"event":"projects.create","data":[{"id":1,"name":"Website","state":"running","client":{"id":1,"name":"ACME"},"dates":{"date_start":"2017-06-09","date_end":"2017-07-09"},"project_id":{"id":null,"is_generated":false},"tags":[{"name":"Billable"}],"responsible_people":[{"email":"john@example.com","first_name":"John","last_name":"Doe"}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]},{"event":"peoplecosts.change","data":[{"id":1,"items":[{"action":"upsert","item":{"type":"activity","activity_id":1},"activity":{"name":"Design","hourly_rate":100}},{"action":"upsert","item":{"type":"person","activity_id":1,"person_id":1},"hours":{"budget":20},"person":{"email":"test@example.com","first_name":"Tester","last_name":"Test"},"activity":{"name":"Design"}},{"action":"upsert","item":{"type":"task","activity_id":1,"person_id":1,"task_id":1},"hours":{"budget":20},"person":{"email":"test@example.com","first_name":"Tester","last_name":"Test"},"activity":{"name":"Design"},"task":{"name":"Homepage"}},{"action":"delete","item":{"type":"activity","activity_id":2}},{"action":"delete","item":{"type":"person","activity_id":2,"person_id":2},"hours":{"budget":0}},{"action":"delete","item":{"type":"task","activity_id":2,"person_id":2,"task_id":2},"hours":{"budget":0}}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]},{"event":"expenses.change","data":[{"id":1,"items":[{"action":"upsert","item":{"type":"expense","expense_id":1},"expense":{"description":"Invision license","purchased":{"total_amount":2000,"date":"2017-03-28"},"billed":{"total_amount":1000}}},{"action":"delete","item":{"type":"expense","expense_id":2}}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]},{"event":"billing.change","data":[{"id":1,"items":[{"action":"upsert","item":{"type":"billing","billing_id":1},"billing":{"description":"Invoice 2017000019","total_amount":1000,"date":"2017-04-01","status":"sent"}},{"action":"delete","item":{"type":"billing","billing_id":2}}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]}]}
+            {"meta":{"events":{"timeentries.create":1,"timeentries.update":1,"projects.create":1,"peoplecosts.change":1,"expenses.change":1,"billing.change":1}},"links":{"webhook":{"webhook":"https://new.costlocker.com/api-public/v2/webhooks/dd76b5e0-5b74-4a68-b0ad-db6efbed7b9c","example":"https://new.costlocker.com/api-public/v2/webhooks/dd76b5e0-5b74-4a68-b0ad-db6efbed7b9c/test"}},"data":[{"event":"timeentries.create","data":[{"uuid":"139fce1b-c243-4890-b328-ec5d8394e073","date":"2017-06-09T09:53:06+0000","duration":3600,"description":"Init project","assignment":{"person_id":1,"project_id":1,"activity_id":1,"task_id":1},"names":{"person_fullname":"John Doe","project_name":"Website","client_name":"ACME","activity_name":"Design","task_name":"Homepage"}}]},{"event":"timeentries.update","data":[{"uuid":"e74dd664-ac42-473c-beae-e3081640c7a9","date":"2017-06-09T09:53:06+0000","duration":3600,"description":"Init project","assignment":{"person_id":1,"project_id":1,"activity_id":1,"task_id":1},"names":{"person_fullname":"John Doe","project_name":"Website","client_name":"ACME","activity_name":"Design","task_name":"Homepage"}}]},{"event":"projects.create","data":[{"id":1,"name":"Website","state":"running","client":{"id":1,"name":"ACME"},"dates":{"date_start":"2017-06-09","date_end":"2017-07-09"},"project_id":{"id":null,"is_generated":false},"tags":[{"name":"Billable"}],"responsible_people":[{"email":"john@example.com","first_name":"John","last_name":"Doe"}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]},{"event":"peoplecosts.change","data":[{"id":1,"items":[{"action":"upsert","item":{"type":"activity","activity_id":1},"activity":{"name":"Design","hourly_rate":100}},{"action":"upsert","item":{"type":"person","activity_id":1,"person_id":1},"hours":{"budget":20},"person":{"email":"test@example.com","first_name":"Tester","last_name":"Test"},"activity":{"name":"Design"}},{"action":"upsert","item":{"type":"task","activity_id":1,"person_id":1,"task_id":1},"hours":{"budget":20},"person":{"email":"test@example.com","first_name":"Tester","last_name":"Test"},"activity":{"name":"Design"},"task":{"name":"Homepage"}},{"action":"delete","item":{"type":"activity","activity_id":2}},{"action":"delete","item":{"type":"person","activity_id":2,"person_id":2},"hours":{"budget":0}},{"action":"delete","item":{"type":"task","activity_id":2,"person_id":2,"task_id":2},"hours":{"budget":0}}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]},{"event":"expenses.change","data":[{"id":1,"items":[{"action":"upsert","item":{"type":"expense","expense_id":1},"expense":{"description":"Invision license","purchased":{"total_amount":2000,"date":"2017-03-28"},"billed":{"total_amount":1000}}},{"action":"delete","item":{"type":"expense","expense_id":2}}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]},{"event":"billing.change","data":[{"id":1,"items":[{"action":"upsert","item":{"type":"billing","billing_id":1},"billing":{"description":"Invoice 2017000019","total_amount":1000,"date":"2017-04-01","status":"sent"}},{"action":"delete","item":{"type":"billing","billing_id":2}}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]}]}
 
 + Response 404 (application/vnd.api+json)
 
@@ -1503,6 +1609,12 @@ Based on [polling url in zappier](https://zapier.com/developer/documentation/v2/
 
 + Parameters
     + uuid (clUuid, required)
+
++ Request
+
+    + Headers
+
+            Authorization: _check_authentication_section_
 
 + Response 200 (application/vnd.api+json)
 
@@ -1736,6 +1848,8 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Clients`
 
 ## Projects [/v1/Simple_Projects]
 
+Response contains `profit`, `revenue`, `costs`, ..., if [the authenticated user](/#reference/0/authentication) is `ADMIN` or `OWNER`.
+
 Projects are ordered by `id DESC`.
 
 ### Filtered projects [POST /v1/]
@@ -1744,6 +1858,10 @@ Projects are ordered by `id DESC`.
 
     + Attributes
         + project (array[number], optional) - list of project ids
+        + state (enum, optional)
+            + running
+            + finished
+        + recurring: false (boolean, optional) - if recurring projects are included
         + limit (number, optional) - pagination, by default all projects are returned
         + offset: 0 (number, optional) - pagination
 
@@ -1873,13 +1991,50 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects`
 
 ## Projects - Billing [/v1/Simple_Projects_Billing]
 
+### Filtered billing [POST /v1/]
+
++ Request (application/json)
+
+    + Attributes
+        + project (array[number], optional) - list of project ids
+
+    + Headers
+
+            Api-Token: YOUR-API-TOKEN
+    
+    + Body
+
+            {
+                "Simple_Projects_Billing": {
+                    "project": [1, 2]
+                }
+            }
+
++ Response 200 (application/json)
+
+    + Body
+
+
+            {
+                "Simple_Projects_Billing": [
+                    {
+                        "id": "1",
+                        "name": "Invoice201400001",
+                        "project_id": "1",
+                        "da": "2014-10-10",
+                        "amount": 15200,
+                        "issued": false
+                    }
+                ]
+            }
+
 ### Billing items across ongoing and closed projects [POST /v1/]
 
 Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects_Billing`
 
 + Request (application/json)
-     
-      + Headers
+
+    + Headers
 
             Api-Token: YOUR-API-TOKEN
     
@@ -2036,6 +2191,43 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects_Ce`
         }
 
 ## Projects - Expenses [/v1/Simple_Projects_Expenses]
+
+### Filtered expenses [POST /v1/]
+
++ Request (application/json)
+
+    + Attributes
+        + project (array[number], optional) - list of project ids
+
+    + Headers
+
+            Api-Token: YOUR-API-TOKEN
+    
+    + Body
+
+            {
+                "Simple_Projects_Expenses": {
+                    "project": [1, 2]
+                }
+            }
+
++ Response 200 (application/json)
+
+    + Body
+
+
+            {
+                "Simple_Projects_Expenses": [
+                    {
+                        "id": "1",
+                        "project_id": "1",
+                        "name": "Invision",
+                        "date": "2014-09-18",
+                        "buy": 3000,
+                        "sell": 3000
+                    }
+                ]
+            }
 
 ### Project Expenses across running and finished projects [POST /v1/]
 

@@ -6,7 +6,7 @@ image: https://cloud.githubusercontent.com/assets/7994022/26050527/43dbc29c-395f
 links:
   Blog: "/blog/"
   Projects API: http://docs.costlocker.apiary.io/#reference/0/projects/create/update-projects
-  Import Harvest projects (demo): http://integrations.costlocker.com
+  Import Harvest projects (demo): https://harvest,integrations.costlocker.com
   Import Harvest projects (source code): https://github.com/costlocker/integrations/harvest
 ---
 
@@ -311,7 +311,7 @@ A response always contains standard `item` definition.
 ## _Demo:_ Import projects from Harvest
 
 We've built _Harvest projects importer_ during development of the new API, try it at 
-[http://integrations.costlocker.com](http://integrations.costlocker.com)
+[https://harvest,integrations.costlocker.com](https://harvest,integrations.costlocker.com)
 ([source code](https://github.com/costlocker/integrations/harvest)).
 
 **Let us know if you've created similar application that connects Costlocker to a project management tool!**
