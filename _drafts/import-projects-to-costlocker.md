@@ -2,7 +2,7 @@
 title: "Import projects to Costlocker"
 perex: "Automate Costlocker projects management via API v2"
 date: 2017-05-14 10:00:00 +0100
-image: https://cloud.githubusercontent.com/assets/7994022/26050527/43dbc29c-395f-11e7-9902-4585f9f7f463.png
+image: https://user-images.githubusercontent.com/7994022/29269015-b2eba44a-80ef-11e7-923e-dd97f0fdb86c.png
 links:
   Blog: "/blog/"
   Projects API: http://docs.costlocker.apiary.io/#reference/0/projects/create/update-projects
@@ -316,7 +316,7 @@ We've built _Harvest projects importer_ during development of the new API, try i
 
 **Let us know if you've created similar application that connects Costlocker to a project management tool!**
 
-![Import harvest projects to Costlocker](https://cloud.githubusercontent.com/assets/7994022/26050527/43dbc29c-395f-11e7-9902-4585f9f7f463.png)
+![Import harvest projects to Costlocker](https://user-images.githubusercontent.com/7994022/29269015-b2eba44a-80ef-11e7-923e-dd97f0fdb86c.png)
 
 ---
 
