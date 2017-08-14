@@ -1,0 +1,21 @@
+
+- name: Integrations ([web](https://integrations.costlocker.com/), [code](https://github.com/costlocker/integrations))
+  apps:
+      - name: Basecamp
+        description: synchronize Costlocker and Basecamp projects 
+        code: https://github.com/costlocker/integrations/basecamp
+      - name: Fakturoid
+        description: create invoices in Fakturoid 
+        code: https://github.com/costlocker/integrations/fakturoid
+      - name: Harvest
+        description: import wizard that uses OAuth2 and Projects API
+        code: https://github.com/costlocker/integrations/harvest
+      - name: Webhooks
+        description: manage webhooks and see how our API works
+        code: https://github.com/costlocker/integrations/webhook
+
+- name: Reports
+  apps:
+      - name: Profitability reports generator (PHP)
+        description: generate XLSX profitability reports from Costlocker API
+        code: https://github.com/costlocker/reports
