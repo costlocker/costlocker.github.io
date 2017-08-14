@@ -1,21 +1,31 @@
 
-- name: Integrations ([web](https://integrations.costlocker.com/), [code](https://github.com/costlocker/integrations))
+- name: 3rd party integrations
   apps:
       - name: Basecamp
-        description: synchronize Costlocker and Basecamp projects 
+        description: Synchronize Costlocker and Basecamp projects 
+        web: https://basecamp.integrations.costlocker.com/
         code: https://github.com/costlocker/integrations/basecamp
+        icon: https://37signals.com/images/basecamp-logo.png
       - name: Fakturoid
-        description: create invoices in Fakturoid 
+        description: Create invoices in Fakturoid 
+        web: https://fakturoid.integrations.costlocker.com/
         code: https://github.com/costlocker/integrations/fakturoid
+        icon: http://lh4.ggpht.com/f4MbYdkzKxy4H8RfxsbPXG8Ub0-Re6D2lvFgOEqKZTc8bNkCwJ5w_szn-CgVITdAOIU
       - name: Harvest
-        description: import wizard that uses OAuth2 and Projects API
+        description: Import Harvest projects via wizard that uses OAuth2 and Projects API
+        web: https://harvest.integrations.costlocker.com/
         code: https://github.com/costlocker/integrations/harvest
-      - name: Webhooks
-        description: manage webhooks and see how our API works
-        code: https://github.com/costlocker/integrations/webhook
+        icon: https://www.getharvest.com/assets/press/harvest-logo-icon-77a6f855102e2f85a7fbe070575f293346a643c371a49ceff341d2814e270468.png
 
-- name: Reports
+- name: Integrations for developers
   apps:
+      - name: Webhooks
+        description: Manage webhooks and see how our API works
+        web: https://webhooks.integrations.costlocker.com/
+        code: https://github.com/costlocker/integrations/webhook
+        icon: https://a.slack-edge.com/ae7f/img/services/outgoing-webhook_512.png
       - name: Profitability reports generator (PHP)
-        description: generate XLSX profitability reports from Costlocker API
+        description: Generate XLSX profitability reports from Costlocker API
+        web: https://github.com/costlocker/reports
         code: https://github.com/costlocker/reports
+        icon: http://www.freeiconspng.com/uploads/excel-spreadsheet-icon-file-type-xls-icon-18.png

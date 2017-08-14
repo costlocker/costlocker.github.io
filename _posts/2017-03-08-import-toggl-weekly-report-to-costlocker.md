@@ -2,6 +2,7 @@
 title: "Import Toggl weekly report to Costlocker"
 perex: "Automate synchronization between Toggl and Costlocker"
 date: 2017-03-08 10:00:00 +0100
+icon: https://www.klipfolio.com/sites/default/files/integrations/toggl.png
 image: https://cloud.githubusercontent.com/assets/7994022/24607599/e3c37312-1872-11e7-82d2-e4ce7d7c490a.png
 links:
   Blog: "/blog/"

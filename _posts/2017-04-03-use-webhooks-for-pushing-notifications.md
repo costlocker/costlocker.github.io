@@ -2,6 +2,7 @@
 title: "Use webhooks for pushing notifications"
 perex: "Push Costlocker notifications to Slack, ..."
 date: 2017-04-03 10:00:00 +0100
+icon: https://a.slack-edge.com/ae7f/img/services/outgoing-webhook_512.png
 image: https://cloud.githubusercontent.com/assets/26380189/24649765/700b1c7a-1928-11e7-9753-0445bb7dddbc.png
 links:
   Blog: "/blog/"

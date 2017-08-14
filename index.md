@@ -6,25 +6,38 @@ links:
   Blog: "/blog/"
   Costlocker.com: https://costlocker.com
   Costlocker.cz: http://costlocker.cz
+  Github: "https://github.com/costlocker"
 ---
 
 # Costlocker
 
-This is the official repository for [Costlocker API](https://costlocker.com/).
+This is the official repository for **Costlocker API**.
 
 ## API documentation
 
-* [Costlocker API Reference (apiary)](http://docs.costlocker.apiary.io/#)
+<div class="app">
+  <a href="http://docs.costlocker.apiary.io/#" target="_blank">
+      <figure>
+          <img src="https://static.apiary.io/assets/v6Zkz37_.png" />
+      </figure>
+      <span>Costlocker API Reference (apiary)</span>
+  </a>
+</div>
 
 ## Blog
 
-<ul id="blog">
+<div id="blog">
   {% for post in site.posts %}
-    <li>
-      <a href="{{ post.url }}">{{ post.title }}</a>
-    </li>
+  <div class="app">
+    <a href="{{ post.url }}">
+        <figure>
+            <img src="{{ post.icon }}" />
+        </figure>
+        <span>{{ post.title }}</span>
+    </a>
+  </div>
   {% endfor %}
-</ul>
+</div>
 
 ## Sample apps
 
@@ -32,13 +45,17 @@ This is the official repository for [Costlocker API](https://costlocker.com/).
 
 #### {{ group.name }}
 
-<ul>
-  {% for app in group.apps %}
-    <li>
-      <a href="{{ app.code }}">{{ app.name }}</a> - {{ app.description }}
-    </li>
-  {% endfor %}
-</ul>
+{% for app in group.apps %}
+<div class="app">
+  <a href="{{ app.web }}" target="_blank">
+    <figure>
+      <img src="{{ app.icon }}" title="{{ app.name }}" />
+    </figure>
+    <span>{{ app.description }}</span>
+  </a>
+  <a href="{{ app.code }}" class="code">[source code]</a>
+</div>
+{% endfor %}
 
 {% endfor %}
 

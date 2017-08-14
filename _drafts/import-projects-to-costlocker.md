@@ -2,6 +2,7 @@
 title: "Import projects to Costlocker"
 perex: "Automate Costlocker projects management via API v2"
 date: 2017-05-14 10:00:00 +0100
+icon: https://www.getharvest.com/assets/press/harvest-logo-icon-77a6f855102e2f85a7fbe070575f293346a643c371a49ceff341d2814e270468.png
 image: https://user-images.githubusercontent.com/7994022/29269015-b2eba44a-80ef-11e7-923e-dd97f0fdb86c.png
 links:
   Blog: "/blog/"

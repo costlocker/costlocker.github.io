@@ -1,0 +1,28 @@
+---
+---
+
+@import "{{ site.theme }}";
+.app {
+    figure {
+        display: block;
+        margin: 0 1em 1em 0;
+        float: left;
+        width: 3em;
+        height: 3em;
+    }
+    
+    span {
+        display: inline-block;
+        line-height: 3em;
+        vertical-align: middle;
+    }
+    &:after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+    .code {
+        font-size: 0.8em;
+        color: #999;
+    }
+}
