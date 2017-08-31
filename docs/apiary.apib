@@ -66,7 +66,7 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 
 #### _August 2017_
 
-* enable/disable webhook via [`is_enabled`](/#reference/0/webhooks)
+* **[webhooks](/#reference/0/webhooks)** enable/disable webhook via [`is_enabled`], don't send webhooks with no events
 * fix ordering [`peoplecosts` in project detail](/#reference/0/projects/get-project-detail) and [`Simple_Projects_Ce`](/#reference/0/projects-people-costs/filtered-people-costs)
 
 ### Data Structures
@@ -477,7 +477,7 @@ Use your app name and personal token in Authorization header: `Authorization:Bas
 ### OAuth 2 [GET /oauth2/]
 
 1. Register your app (name, `redirect_url`) - _write us and we'll send your `client_id` and `client_secret`:_
-1. Select [an OAuth 2 client library](https://oauth.net/code/#client-libraries) ([php demo](https://gist.github.com/costlockerbot/15c1e5fa6a23ed8a22daf0a34a31f60b))
+1. Select [an OAuth 2 client library](https://oauth.net/code/#client-libraries) ([php demo](https://gist.github.com/costlockerbot/53b0b29c5787086709ff151516bd91f3))
 1. Configure the client
     1. Request authorization at https://new.costlocker.com/api-public/oauth2/authorize
     1. Get access token at https://new.costlocker.com/api-public/oauth2/access_token
