@@ -7,8 +7,8 @@ image: https://user-images.githubusercontent.com/7994022/29269015-b2eba44a-80ef-
 links:
   Blog: "/blog/"
   Projects API: http://docs.costlocker.apiary.io/#reference/0/projects/create/update-projects
-  Import Harvest projects (demo): https://harvest,integrations.costlocker.com
-  Import Harvest projects (source code): https://github.com/costlocker/integrations/tree/master/harvest
+  Import Harvest projects (demo): https://harvest.integrations.costlocker.com
+  Import Harvest projects (source code): https://gitlab.com/costlocker/integrations/tree/master/harvest
 ---
 
 Are you using Harvest, Teamwork, JIRA, Asana, Toggl, &hellip; but missing
@@ -313,7 +313,7 @@ A response always contains standard `item` definition.
 
 We've built _Harvest projects importer_ during development of the new API, try it at 
 [https://harvest.integrations.costlocker.com](https://harvest.integrations.costlocker.com)
-([source code](https://github.com/costlocker/integrations/tree/master/harvest)).
+([source code](https://gitlab.com/costlocker/integrations/tree/master/harvest)).
 
 **Let us know if you've created similar application that connects Costlocker to a project management tool!**
 
