@@ -69,6 +69,12 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 * **[webhooks](/#reference/0/webhooks)** enable/disable webhook via [`is_enabled`], don't send webhooks with no events
 * fix ordering [`peoplecosts` in project detail](/#reference/0/projects/get-project-detail) and [`Simple_Projects_Ce`](/#reference/0/projects-people-costs/filtered-people-costs)
 
+#### _December 2017_
+
+* add **person id** to [user detail](#reference/0/me/user-detail)
+* [Simple_Timesheet](/#reference/0/timesheet/filtered-entries) - filter by `uuid`, filter running entries by `isRunning`, return `uuid` if request has **withUuids**
+* start **tracking** if [`duration = null`](/#reference/0/time-entries/create/update-time-entries)
+
 ### Data Structures
 
 #### clUuid (string, optional) - `87d2a4e5-5a2e-413d-ab4b-5b3771cc03c1`
@@ -548,6 +554,7 @@ Basic information about current user and company.
             {
                 "data": {
                     "person": {
+                        "id": 1,
                         "email": "test@example.com",
                         "first_name": "John",
                         "last_name": "Doe",
@@ -1267,6 +1274,19 @@ entries from other persons._
                             "project_id": 1,
                             "activity_id": 1
                         }
+                    },
+                    {
+                        "date": "2017-03-28 09:46:00",
+                        "description": "Start tracking",
+                        "duration": null,
+                        "assignment": {
+                            "project_id": 1,
+                            "activity_id": 1
+                        }
+                    },
+                    {
+                        "date": "2017-03-28 09:46:00",
+                        "duration": null
                     }
                 ]
             }
@@ -1375,6 +1395,20 @@ entries from other persons._
                             "pointer": "/0/assignment/activity_id"
                         },
                         "detail": "Value null is not a(n) \"integer\""
+                    }
+                ]
+            }
+
++ Response 409 (application/vnd.api+json)
+
+    + Body
+
+            {
+                "errors": [
+                    {
+                        "status": 409,
+                        "title": "Invalid time-entries",
+                        "detail": "Person cannot track more than one entry at time"
                     }
                 ]
             }
@@ -2268,15 +2302,18 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects_Expenses`
 + Request (application/json)
 
     + Attributes
+        + uuid (array[clUuid], optional) - array of entries id's to be limited
         + project (array[number], optional) - array of projects id's to be limited
         + person (array[number], optional) - array of people id's to be limited
         + activity (array[number], optional) - array of acitivities is's to be limited
         + client (array[number], optional) - array of clients id's to be limited
+        + isRunning: false (boolean, optional) -  if only running entries are returned, `nonproject=true` is recommended for finding running entries
         + nonproject: false (boolean, optional) -  if no-project entries are included in response
         + description_name (string, optional) - filter by description - case insensitive, diacritic insensitive
         + task_name (string, optional) - filter by task name - case-insensitive, diacritic-insensitive
         + datef (clDate, optional) - only entries created after specific date (Y-m-d)
         + datet (clDate, optional) - only entries created before specific date (Y-m-d)
+        + withUuids: false (boolean, optional) - if `true` then `uuid` attribute is returned for each entry
         + withRates: false (boolean, optional) - if `true` then `client_rate`, `person_rate`, `person_overhead` attributes are returned (just like in `Simple_Projects_Ce`)
         + limit (number, optional) - pagination, by default all projects are returned
         + offset: 0 (number, optional) - pagination
@@ -2299,6 +2336,7 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects_Expenses`
                     "datef": "2016-11-01",
                     "datet": "2016-11-30",
                     "withRates": true,
+                    "withUuids": true,
                     "limit": 5,
                     "offset": 0
                 }
@@ -2309,6 +2347,7 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects_Expenses`
         {
             "Simple_Timesheet": [
                 {
+                    "uuid":"cc886881-bb07-4b6f-8c7e-db3495eecfe9",
                     "date": "2015-07-08T20:09:16+0000",
                     "project": "1",
                     "person": "1",
@@ -2323,6 +2362,7 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects_Expenses`
                     "person_overhead": 0
                 },
                 {
+                    "uuid":"cc886881-bb07-4b6f-8c7e-db3495eecfe8",
                     "date": "2015-02-09T20:09:16+0000",
                     "project": "2",
                     "person": "1",
@@ -2336,7 +2376,8 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects_Expenses`
                     "person_rate": 500,
                     "person_overhead": 100
                 },      
-                {  
+                {
+                    "uuid":"cc886881-bb07-4b6f-8c7e-db3495eecfe7",
                     "date":"2016-11-29T10:32:06+0000",
                     "project":null,
                     "person":"1",
