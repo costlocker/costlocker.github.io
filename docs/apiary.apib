@@ -75,6 +75,15 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 * [Simple_Timesheet](/#reference/0/timesheet/filtered-entries) - filter by `uuid`, filter running entries by `isRunning`, return `uuid` if request has **withUuids**
 * start **tracking** if [`duration = null`](/#reference/0/time-entries/create/update-time-entries)
 
+#### _January 2018_
+
+* [projects list](#reference/0/projects/get-projects)
+    * paginate projects - `?page[offset]=0&page[limit]=10`
+    * optionally load projects items - `?types=peoplecosts`
+    * add projects count to `meta` field
+* add **`action`**  (`create`, `update`, `nothing`) to [time-entries response](#reference/0/time-entries/create/update-time-entries)
+* [rate limits](#reference/0/rest-api-v2/rate-limits) - **20 000 API requests per 24 hours**
+
 ### Data Structures
 
 #### clUuid (string, optional) - `87d2a4e5-5a2e-413d-ab4b-5b3771cc03c1`
@@ -198,11 +207,13 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 + date: `2017-03-28T09:46:00+0000` (clLiberalDate, required) - start datetime
 + duration: 3600 (number, required) - duration in seconds
 + description (string, optional) - description
-+ assignment (object, required)
-    + person_id (number, optional) - authenticated person is used if the id is missing
-    + project_id: 1 (number, required)
-    + activity_id: 1 (number, required) 
-    + task_id (number, optional)
++ assignment (clTimeentryAssignment, required)
+
+#### clTimeentryAssignment (object)
++ person_id (number, optional) - authenticated person is used if the id is missing
++ project_id: 1 (number, required)
++ activity_id: 1 (number, required) 
++ task_id (number, optional)
 
 #### clWebhookDelete (object)
 + uuid (clUuid, required)
@@ -351,7 +362,7 @@ _Notice: examples are always using `data` field with array of objects._
 
 We return [json:api responses](http://jsonapi.org/format/#document-structure). `data` contains raw json response, we aren't using `attributes` or `relationships`.
 
-+ Response 400 (application/vnd.api+json)
++ Response 200 (application/vnd.api+json)
 
     + Attributes (jsonApiResponse)
 
@@ -415,6 +426,40 @@ _Notice: All requests are validated as array of objects. Even if you send one ob
                         "status": 404,
                         "title": "Webhook not found",
                         "detail": "Webhook 'bfef6a2d-cef4-d55c-97c3-203208177bd1' does not exist, or you are not authorized to see it"
+                    }
+                ]
+            }
+
+### Rate limits [GET /v2/?RateLimit]
+
+OAuth client or access token can make **20 000 API requests per 24 hours**.
+The returned HTTP headers of any API request show your current rate limit status.
+
+Once you exceed the limit, calls will return HTTP status `429 Too Many Requests`.
+The daily limit resets at midnight based on 
+[the time zone of the Costlocker company](https://new.costlocker.com/settings/company).
+
+_You can reduce the number of calls by decreasing the polling frequency, using bulk API,
+or caching data. Let us know, you're still hitting rate limits, even if you're using the API efficiently._
+
++ Response 429 (application/vnd.api+json)
+
+    + Attributes (jsonApiErrors)
+
+    + Headers
+
+            X-RateLimit-Limit: 50000
+            X-RateLimit-Remaining: 46743
+            X-RateLimit-Reset: 1517270400
+            
+    + Body
+
+            {
+                "errors": [
+                    {
+                        "status": 429,
+                        "title": "Too many requests",
+                        "detail": "You have reached your daily limit."
                     }
                 ]
             }
@@ -701,7 +746,7 @@ _**Scopes:** EMPLOYEE cannot manage projects, but he is able to read information
 
 ### Create/update projects [POST /v2/projects/]
 
-People costs are upserted. If you sends new client/person/tag/activity we will create new entities.
+People costs are upserted. If you sends new client/person/tag/activity/task we will create new entities.
 You can reference existing entities by ids, name (_case-insensitive_) or object with id/name.
 
 We also recommend using existing projects as template for updating projects.
@@ -948,15 +993,30 @@ Take look at example requests in Apiary or check
                 ]
             }
 
-### Get projects [GET /v2/projects/{?state}]
+### Get projects [GET /v2/projects/{?page,state,types}]
 
 Alternative display of [projects list from v1](http://docs.costlocker.apiary.io/#reference/0/projects/).
 If you unset `id` you can use it as template for creating a new project.
 
+Use `types` query parameter for loading
+[project details](#reference/0/projects/get-project-detail) for multiple projects.
+Items are loaded only for first 100 projects. Use pagination `?page[limit]=100&page[offset]=100`
+if you'd like to load project details for more projects.
+
 + Parameters
+    + page (object, optional)
+        + limit (number, required)
+        + offset: 0 (number, optional)
     + state (clProjectState, optional)
         + running
         + finished
+    + types (enum, optional)
+        + `` - by default no items are returned
+        + peoplecosts
+        + billing
+        + expenses
+        + discounts
+        + `expenses,billing` - you can combine multiple types
 
 + Request
 
@@ -967,11 +1027,16 @@ If you unset `id` you can use it as template for creating a new project.
 + Response 200 (application/vnd.api+json)
 
     + Attributes ()
+        + meta (object)
+            + count (number) - number of returned projects
         + data (array[clProject], required)
 
     + Body
 
             {
+                "meta": {
+                    "count": 1
+                },
                 "data": [
                     {
                         "id": "123456",
@@ -1300,13 +1365,18 @@ _**Constraints:** [finished projects](#reference/0/projects/get-projects) cannot
         + meta (clMetaUpsert, required)
         + data (array[object], required)
             + uuid (clUuid, required) - uuid of created/updated time-entry
+            + assignment (clTimeentryAssignment, required)
+            + action (enum, required)
+                + create
+                + update
+                + nothing - update that caused to no change
 
     + Body
 
             {
                 "meta": {
                     "created": 1,
-                    "updated": 1
+                    "updated": 2
                 },
                 "data": [
                     {
@@ -1316,7 +1386,8 @@ _**Constraints:** [finished projects](#reference/0/projects/get-projects) cannot
                             "project_id": 1,
                             "activity_id": 1,
                             "task_id": 1
-                        }
+                        },
+                        "action": "create"
                     },
                     {
                         "uuid": "b0537a3d-ee6e-45d1-8734-2b4cdc00cfb3",
@@ -1325,7 +1396,18 @@ _**Constraints:** [finished projects](#reference/0/projects/get-projects) cannot
                             "project_id": 1,
                             "activity_id": 1,
                             "task_id": null
-                        }
+                        },
+                        "action": "update"
+                    },
+                    {
+                        "uuid": "d0537a3d-ee6e-45d1-8734-2b4cdc00cfb3",
+                        "assignment": {
+                            "person_id": 1,
+                            "project_id": 1,
+                            "activity_id": 1,
+                            "task_id": null
+                        },
+                        "action": "nothing"
                     }
                 ]
             }
