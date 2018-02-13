@@ -87,6 +87,10 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
     * fix duplicating task names when `task_id` is not used
     * improve error message when JSON cannot be parsed
 
+#### _February 2018_
+
+* [rate limit](#reference/0/rest-api-v2/rate-limits) resets at UTC midnight (_[the time zone of the Costlocker company](https://new.costlocker.com/settings/company) is ignored_)
+
 ### Data Structures
 
 #### clUuid (string, optional) - `87d2a4e5-5a2e-413d-ab4b-5b3771cc03c1`
@@ -439,8 +443,7 @@ OAuth client or access token can make **20 000 API requests per 24 hours**.
 The returned HTTP headers of any API request show your current rate limit status.
 
 Once you exceed the limit, calls will return HTTP status `429 Too Many Requests`.
-The daily limit resets at midnight based on 
-[the time zone of the Costlocker company](https://new.costlocker.com/settings/company).
+The daily limit resets at UTC midnight.
 
 _You can reduce the number of calls by decreasing the polling frequency, using bulk API,
 or caching data. Let us know, you're still hitting rate limits, even if you're using the API efficiently._
