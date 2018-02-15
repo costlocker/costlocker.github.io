@@ -90,6 +90,10 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 #### _February 2018_
 
 * [rate limit](#reference/0/rest-api-v2/rate-limits) resets at UTC midnight (_[the time zone of the Costlocker company](https://new.costlocker.com/settings/company) is ignored_)
+* **2018-02-28** - redirect `app.costlocker.com`
+    * please change domain and [authentication mechanism](/#reference/0/authentication)
+    * _before:_ `curl -X POST -H "Api-Token:$TOKEN" "https://app.costlocker.com/api-public/v1/" -d '{"Simple_Tags": {}}'`
+    * _after:_ `curl -X POST -u "my_app:$TOKEN" "https://new.costlocker.com/api-public/v1/" -d '{"Simple_Tags": {}}'`
 
 ### Data Structures
 
@@ -1787,7 +1791,7 @@ They cannot see all projects and timesheets, salaries, rates, revenues, billing 
      
       + Headers
 
-            Api-Token: YOUR-API-TOKEN
+            Authorization: _check_authentication_section_
     
     + Body
 
@@ -1829,7 +1833,7 @@ They cannot see all projects and timesheets, salaries, rates, revenues, billing 
      
       + Headers
 
-            Api-Token: YOUR-API-TOKEN
+            Authorization: _check_authentication_section_
 
 + Response 200 (application/json)
     
@@ -1858,7 +1862,7 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_People`
      
       + Headers
 
-            Api-Token: YOUR-API-TOKEN
+            Authorization: _check_authentication_section_
     
     + Body
 
@@ -1919,7 +1923,7 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Activities`
      
       + Headers
 
-            Api-Token: YOUR-API-TOKEN
+            Authorization: _check_authentication_section_
     
     + Body
 
@@ -1950,7 +1954,7 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Clients`
      
       + Headers
 
-            Api-Token: YOUR-API-TOKEN
+            Authorization: _check_authentication_section_
     
     + Body
 
@@ -1991,7 +1995,7 @@ Projects are ordered by `id DESC`.
 
     + Headers
 
-            Api-Token: YOUR-API-TOKEN
+            Authorization: _check_authentication_section_
     
     + Body
 
@@ -2057,7 +2061,7 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects`
 
     + Headers
 
-            Api-Token: YOUR-API-TOKEN
+            Authorization: _check_authentication_section_
     
     + Body
 
@@ -2124,7 +2128,7 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects`
 
     + Headers
 
-            Api-Token: YOUR-API-TOKEN
+            Authorization: _check_authentication_section_
     
     + Body
 
@@ -2160,7 +2164,7 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects_Billing`
 
     + Headers
 
-            Api-Token: YOUR-API-TOKEN
+            Authorization: _check_authentication_section_
     
     + Body
 
@@ -2200,7 +2204,7 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects_Billing`
 
     + Headers
 
-            Api-Token: YOUR-API-TOKEN
+            Authorization: _check_authentication_section_
     
     + Body
 
@@ -2267,7 +2271,7 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects_Ce`
      
       + Headers
 
-            Api-Token: YOUR-API-TOKEN
+            Authorization: _check_authentication_section_
     
     + Body
 
@@ -2325,7 +2329,7 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects_Ce`
 
     + Headers
 
-            Api-Token: YOUR-API-TOKEN
+            Authorization: _check_authentication_section_
     
     + Body
 
@@ -2361,7 +2365,7 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects_Expenses`
      
       + Headers
 
-            Api-Token: YOUR-API-TOKEN
+            Authorization: _check_authentication_section_
     
     + Body
 
@@ -2410,7 +2414,7 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects_Expenses`
 
     + Headers
 
-            Api-Token: YOUR-API-TOKEN
+            Authorization: _check_authentication_section_
     
     + Body
 
@@ -2495,7 +2499,7 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Timesheet`
 
     + Headers
 
-            Api-Token: YOUR-API-TOKEN
+            Authorization: _check_authentication_section_
     
     + Body
 
@@ -2543,7 +2547,7 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Tags`
      
       + Headers
 
-            Api-Token: YOUR-API-TOKEN
+            Authorization: _check_authentication_section_
     
     + Body
 
