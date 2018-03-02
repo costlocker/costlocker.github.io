@@ -95,6 +95,10 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
     * _before:_ `curl -X POST -H "Api-Token:$TOKEN" "https://app.costlocker.com/api-public/v1/" -d '{"Simple_Tags": {}}'`
     * _after:_ `curl -X POST -u "my_app:$TOKEN" "https://new.costlocker.com/api-public/v1/" -d '{"Simple_Tags": {}}'`
 
+#### _March 2018_
+
+* [Simple_Overheads](#reference/0/overhead-costs) - https://new.costlocker.com/dashboard/overhead
+
 ### Data Structures
 
 #### clUuid (string, optional) - `87d2a4e5-5a2e-413d-ab4b-5b3771cc03c1`
@@ -2569,3 +2573,40 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Tags`
                 }
             ]
         }
+
+## Overhead Costs [/v1/Simple_Overheads]
+
+_**Scopes:** Only ADMIN and OWNER can read overhead costs._
+
+### List of all overhead costs [POST /v1/]
+
++ Request (application/json)
+     
+      + Headers
+
+            Authorization: _check_authentication_section_
+    
+    + Body
+
+            {
+                "Simple_Overheads": {}
+            }
+
++ Response 200 (application/json)
+
+    + Attributes
+        + array[object]
+            + id (number, required)
+            + name (string, required)
+            + amount (number, required)
+            + da_start (clDate, required)
+            + da_end (clDate)
+
+    + Body
+
+            {
+                "Simple_Overheads": [
+                    {"id":"1","name":"Internet","amount":20,"da_start":"2016-01-01","da_end":"2016-12-31"},
+                    {"id":"2","name":"Cell phones","amount":100,"da_start":"2016-11-01","da_end":null}
+                ]
+            }
