@@ -98,6 +98,7 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 #### _March 2018_
 
 * [Simple_Overheads](#reference/0/overhead-costs) - https://new.costlocker.com/dashboard/overhead
+* Delete documentation for legacy GET request format for [`API v1`](/#reference/0/simple-api-v1), [POST format](/#reference/0/simple-api-v1/post-request) is preferred
 
 ### Data Structures
 
@@ -1827,40 +1828,9 @@ They cannot see all projects and timesheets, salaries, rates, revenues, billing 
                 "Simple_Timesheet": []
             }
 
-### Legacy GET request [GET /v1/Simple_People]
-
-* The request is called over **http://new.costlocker.com/api-public/v1/{function}**.
-* The request **cannot contain** parameters or multiple functions.
-* The data are returned in **raw array** without function name.
-
-+ Request (application/json)
-     
-      + Headers
-
-            Authorization: _check_authentication_section_
-
-+ Response 200 (application/json)
-    
-    + Body
-
-            [
-                {
-                    "id": "1",
-                    "first_name": "John",
-                    "last_name": "Doe",
-                    "mail": "john.doe@example.com",
-                    "deactivated": false,
-                    "type": "salary",
-                    "salary_hours": 160,
-                    "salary_amount": 30000
-                }
-            ]
-
-## People [/v1/Simple_People]
+## People [/v1/?Simple_People]
 
 ### List of active and inactive people [POST /v1/]
-
-Legacy `GET https://new.costlocker.com/api-public/v1/Simple_People`
 
 + Request (application/json)
      
@@ -1917,11 +1887,9 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_People`
                 ]
             }
 
-## Activities [/v1/Simple_Activities]
+## Activities [/v1/?Simple_Activities]
 
 ### List of active and inactive activities [POST /v1/]
-
-Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Activities`
 
 + Request (application/json)
      
@@ -1948,11 +1916,9 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Activities`
         }
 
 
-## Clients [/v1/Simple_Clients]
+## Clients [/v1/?Simple_Clients]
 
 ### List of active and inactive clients [POST /v1/]
-
-Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Clients`
 
 + Request (application/json)
      
@@ -1978,7 +1944,7 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Clients`
             ]
         }
 
-## Projects [/v1/Simple_Projects]
+## Projects [/v1/?Simple_Projects]
 
 Response contains `profit`, `revenue`, `costs`, ..., if [the authenticated user](/#reference/0/authentication) is `ADMIN` or `OWNER`.
 
@@ -2059,8 +2025,6 @@ Projects are ordered by `id DESC`.
 
 ### List of all ongoing and closed projects [POST /v1/]
 
-Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects`
-
 + Request (application/json)
 
     + Headers
@@ -2121,7 +2085,7 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects`
             }
 
 
-## Projects - Billing [/v1/Simple_Projects_Billing]
+## Projects - Billing [/v1/?Simple_Projects_Billing]
 
 ### Filtered billing [POST /v1/]
 
@@ -2162,8 +2126,6 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects`
 
 ### Billing items across ongoing and closed projects [POST /v1/]
 
-Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects_Billing`
-
 + Request (application/json)
 
     + Headers
@@ -2194,7 +2156,7 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects_Billing`
 
 
 
-## Projects - People Costs [/v1/Simple_Projects_Ce]
+## Projects - People Costs [/v1/?Simple_Projects_Ce]
 
 ### Filtered People Costs [POST /v1/]
 
@@ -2269,8 +2231,6 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects_Billing`
 
 ### People Costs across ongoing and closed projects. [POST /v1/]
 
-Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects_Ce`
-
 + Request (application/json)
      
       + Headers
@@ -2322,7 +2282,7 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects_Ce`
             ]
         }
 
-## Projects - Expenses [/v1/Simple_Projects_Expenses]
+## Projects - Expenses [/v1/?Simple_Projects_Expenses]
 
 ### Filtered expenses [POST /v1/]
 
@@ -2363,8 +2323,6 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects_Ce`
 
 ### Project Expenses across running and finished projects [POST /v1/]
 
-Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects_Expenses`
-
 + Request (application/json)
      
       + Headers
@@ -2393,7 +2351,7 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects_Expenses`
         }
 
 
-## Timesheet [/v1/Simple_Timesheet]
+## Timesheet [/v1/?Simple_Timesheet]
 
 ### Filtered entries [POST /v1/]
 
@@ -2494,8 +2452,6 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Projects_Expenses`
 
 ### All entries [POST /v1/]
 
-Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Timesheet`
-
 * `withRates=false` - entries are without rates (client rate, person rate, person overhead)
 * `nonproject=false` - entries with assigned project, no-project entries are ignored
 
@@ -2541,11 +2497,9 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Timesheet`
             ] 
         }
 
-## Tags [/v1/Simple_Tags]
+## Tags [/v1/?Simple_Tags]
 
 ### List of all tags [POST /v1/]
-
-Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Tags`
 
 + Request (application/json)
      
@@ -2574,7 +2528,7 @@ Legacy `GET https://new.costlocker.com/api-public/v1/Simple_Tags`
             ]
         }
 
-## Overhead Costs [/v1/Simple_Overheads]
+## Overhead Costs [/v1/?Simple_Overheads]
 
 _**Scopes:** Only ADMIN and OWNER can read overhead costs._
 
