@@ -378,7 +378,7 @@ _Notice: examples are always using `data` field with array of objects._
 
 We return [json:api responses](http://jsonapi.org/format/#document-structure). `data` contains raw json response, we aren't using `attributes` or `relationships`.
 
-+ Response 200 (application/vnd.api+json)
++ Response 200 (application/json)
 
     + Attributes (jsonApiResponse)
 
@@ -503,7 +503,7 @@ Use your app name and personal token in Authorization header: `Authorization:Bas
 
             Authorization:Basic base64(app:token)
 
-+ Response 200 (application/vnd.api+json)
++ Response 200 (application/json)
 
         {
            "links":{
@@ -607,7 +607,7 @@ Basic information about current user and company.
 
             Authorization: _check_authentication_section_
 
-+ Response 200 (application/vnd.api+json)
++ Response 200 (application/json)
 
     + Body
 
@@ -642,7 +642,7 @@ that are able to access Costlocker API.
 
             Authorization: _check_authentication_section_
 
-+ Response 200 (application/vnd.api+json)
++ Response 200 (application/json)
 
     + Attributes
         + data (array)
@@ -726,7 +726,7 @@ that are able to access Costlocker API.
 
             Authorization: _check_authentication_section_
 
-+ Response 200 (application/vnd.api+json)
++ Response 200 (application/json)
 
     + Body
 
@@ -761,7 +761,7 @@ _**Scopes:** EMPLOYEE cannot manage projects, but he is able to read information
 
 ### Create/update projects [POST /v2/projects/]
 
-People costs are upserted. If you sends new client/person/tag/activity/task we will create new entities.
+People costs are upserted. If you send new client/person/tag/activity/task we will create new entities.
 You can reference existing entities by ids, name (_case-insensitive_) or object with id/name.
 
 We also recommend using existing projects as template for updating projects.
@@ -895,7 +895,7 @@ Take look at example requests in Apiary or check
                 ]
             }
 
-+ Response 200 (application/vnd.api+json)
++ Response 200 (application/json)
 
     + Body
 
@@ -1039,7 +1039,7 @@ if you'd like to load project details for more projects.
 
             Authorization: _check_authentication_section_
 
-+ Response 200 (application/vnd.api+json)
++ Response 200 (application/json)
 
     + Attributes ()
         + meta (object)
@@ -1119,7 +1119,7 @@ Such objects are always upserted if they don't exist or their existing hours bud
 
             Authorization: _check_authentication_section_
 
-+ Response 200 (application/vnd.api+json)
++ Response 200 (application/json)
 
     + Attributes ()
         + data (clProject, required)
@@ -1373,7 +1373,7 @@ _**Constraints:** [finished projects](#reference/0/projects/get-projects) cannot
                 ]
             }
 
-+ Response 200 (application/vnd.api+json)
++ Response 200 (application/json)
 
     + Attributes
 
@@ -1559,7 +1559,7 @@ Webhooks are created if `uuid` is NOT specified, otherwise webhooks are upserted
                 ]
             }
 
-+ Response 200 (application/vnd.api+json)
++ Response 200 (application/json)
 
     + Attributes ()
         + meta (clMetaUpsert, required)
@@ -1624,7 +1624,7 @@ Webhooks are created if `uuid` is NOT specified, otherwise webhooks are upserted
 
             Authorization: _check_authentication_section_
 
-+ Response 200 (application/vnd.api+json)
++ Response 200 (application/json)
 
     + Attributes ()
         + data (array[clWebhookFull], required)
@@ -1661,7 +1661,7 @@ The detail contains the 20 most recent delivered webhooks in `recent_deliveries`
 
             Authorization: _check_authentication_section_
 
-+ Response 200 (application/vnd.api+json)
++ Response 200 (application/json)
 
     + Attributes ()
         + data (clWebhookDetail, required)
@@ -1707,7 +1707,7 @@ But you could already processed the webhook. In that case you might ignore the s
 
             Authorization: _check_authentication_section_
 
-+ Response 200 (application/vnd.api+json)
++ Response 200 (application/json)
 
     + Attributes
         + meta (object, required)
@@ -1749,7 +1749,7 @@ But you could already processed the webhook. In that case you might ignore the s
 
             Authorization: _check_authentication_section_
 
-+ Response 200 (application/vnd.api+json)
++ Response 200 (application/json)
 
     + Attributes ()
         + data (array[clWebhookDelete], required)
