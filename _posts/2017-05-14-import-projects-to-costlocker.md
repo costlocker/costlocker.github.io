@@ -21,6 +21,8 @@ Costlocker is now able to create and update projects via its API.
 * [API shortcuts](#api-shortcuts)
 * [_Demo_ - Import projects from Harvest](#demo-import-projects-from-harvest)
 
+_**{{ '2018-04-26' | date: '%B %-d, %Y' }}**: we've added [project budgets](#budgets)_
+
 ## Project API introduction
 
 We tried to unify the project structure as much as possible.
@@ -44,6 +46,9 @@ More advanced concepts (personnel costs, billing, &hellip;) are defined in [`ite
    },
    "tags":["Billable"],
    "responsible_people": ["test@example.com"],
+   "budget": {
+      "type": "time_estimates.person_activity"
+   },
    "items":[]
 }
 ```
@@ -236,6 +241,114 @@ You can execute partial updates, such as changing the billing status without mod
     },
     "billing": {
         "status": "sent"
+    }
+}
+```
+
+---
+
+## Budgets
+
+We support five budget types since [April  2018](https://costlocker.docs.apiary.io/#introduction/changelog/april-2018):
+
+| `type` | Description |
+| ------ | ----------- |
+| `time_estimates.person_activity` | Activity hourly rate * Person hours estimates |
+| `time_estimates.activity` | Activity hourly rate * Activity hours estimate |
+| `timesheet` | Activity hourly rate * Tracked hours |
+| `fixed_price.activity` | Activity fixed price |
+| `fixed_price.project` | Project fixed price |
+
+Below you can see what fields are required for each budget type.
+You can send for example person hours budget to timesheet budget, but we'll ignore it
+_(webhook would contain zero hours budget)_.
+
+![Budget fields](https://user-images.githubusercontent.com/7994022/39293649-b40244e8-4939-11e8-97eb-1fb5f4a6abe3.png)
+
+### Person estimates (`time_estimates.person_activity`)
+
+Budget is defined in `person` and `activity` item.
+Take a look at [personnel costs](#personnel-costs).
+
+```json
+{
+    "item": {
+        "type": "person"
+    },
+    "activity": {
+        "name": "Social media",
+        "hourly_rate": 20
+    },
+    "hours": {
+        "budget": 5
+    },
+    "person": "manager@example.com"
+}
+```
+### Activity estimates (`time_estimates.activity`)
+
+Budget is defined in `activity` item:
+
+```json
+{
+    "item": {
+        "type": "activity"
+    },
+    "activity": {
+        "name": "Social media",
+        "hourly_rate": 100
+    },
+    "hours": {
+        "budget": 20
+    }
+}
+```
+
+### Timesheet (`timesheet`)
+
+Budget is defined in `activity` item:
+
+```json
+{
+    "item": {
+        "type": "activity"
+    },
+    "activity": {
+        "name": "Social media",
+        "hourly_rate": 100
+    }
+}
+```
+
+### Activity fixed price (`fixed_price.activity`)
+
+Budget is defined in `activity` item:
+
+```json
+{
+    "item": {
+        "type": "activity"
+    },
+    "activity": {
+        "name": "Social media"
+    },
+    "budget": {
+        "total_amount": 2000
+    }
+}
+```
+
+### Project fixed price (`fixed_price.project`)
+
+Budget is defined in `project` item:
+
+```json
+{
+    "item": {
+        "type": "project"
+    },
+    "budget": {
+        "total_amount": 2000
     }
 }
 ```
