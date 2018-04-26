@@ -33,7 +33,7 @@ it should be simple to execute any operation with project.
 Basic project information is available in the standard json format.
 More advanced concepts (personnel costs, billing, &hellip;) are defined in [`items`](#items).
 
-```
+```json
 {
    "id":"123456",
    "name":"Website",
@@ -110,7 +110,7 @@ If you create a new activity without an hourly rate, zero rate is used.
 It is necessary to specify the email, names, role and salary for every new person.
 The role, salary and names are used only when creating a new person. _An existing person is never updated!_
 
-```
+```json
 {
     "item": {
         "type": "person"
@@ -144,7 +144,7 @@ _The same person definition can be used in `responsible_people` field._
 Tasks are assigned to a person and activity. A parent can be referenced by ids in the `item`
  or by a name/email in the relevant field. References are also described in [shortcuts](#api-shortcuts).
 
-```
+```json
 {
     "item": {
         "type": "task",
@@ -228,7 +228,7 @@ Be aware that revenue (_personnel costs + project expenses - discount_) cannot b
 
 You can execute partial updates, such as changing the billing status without modifying the amount&hellip;
 
-```
+```json
 {
     "item": {
         "type": "billing",
