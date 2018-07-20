@@ -112,6 +112,11 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 
 * Allow [creating time-entry](#reference/0/time-entries/create/update-time-entries) with `"uuid": null`
 
+#### _July 2018_
+
+* [Create/edit time-entry](#reference/0/time-entries/create/update-time-entries) from finished projects with `meta.finished_projects`
+* Running entry and available assignments in [tracking simple API](#reference/0/tracking/)
+
 ### Data Structures
 
 #### clUuid (string, optional) - `87d2a4e5-5a2e-413d-ab4b-5b3771cc03c1`
@@ -1370,11 +1375,13 @@ entries from other persons._
 
 ### Create/update time entries [POST /v2/timeentries/]
 
-_**Constraints:** [finished projects](#reference/0/projects/get-projects) cannot be edited!_
-
 + Request (application/vnd.api+json)
 
     + Attributes
+        + meta
+            + finished_projects (enum, optional)
+                + error - editing entries from finished projects causes an error
+                + reopen - finished project is automatically opened and closed
         + data (array[clTimeentry], required)
 
     + Headers
@@ -1426,6 +1433,7 @@ _**Constraints:** [finished projects](#reference/0/projects/get-projects) cannot
     + Attributes
 
         + meta (clMetaUpsert, required)
+            + `finished_projects`: 0 (number, optional) - number of finished projects (included only if `meta.finished_projects` used in request)
         + data (array[object], required)
             + uuid (clUuid, required) - uuid of created/updated time-entry
             + assignment (clTimeentryAssignment, required)
@@ -1439,7 +1447,8 @@ _**Constraints:** [finished projects](#reference/0/projects/get-projects) cannot
             {
                 "meta": {
                     "created": 1,
-                    "updated": 2
+                    "updated": 2,
+                    "finished_projects": 0
                 },
                 "data": [
                     {
@@ -2567,6 +2576,111 @@ Projects are ordered by `id DESC`.
                     "task_name": "Redesign"
                 }
             ] 
+        }
+
+## Tracking [/v1/?Simple_Tracking]
+
+Format like in [`timeentries` webhook](/#reference/0/webhooks/get-webhook-example).
+`assignment` can be used for [creating/updating time-entries](/#reference/0/time-entries/create/update-time-entries).
+
+### Running entry [POST /v1/]
+
+Returns `null` if no entry is running.
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: _check_authentication_section_
+    
+    + Body
+
+            {
+                "Simple_Tracking_RunningEntry": {}
+            }
+
++ Response 200 (application/json)
+
+        {
+            "Simple_Tracking_RunningEntry": {
+                "uuid": "139fce1b-c243-4890-b328-ec5d8394e073",
+                "date": "2017-06-09T09:53:06+0000",
+                "duration": null,
+                "description": "Init project",
+                "assignment": {
+                    "person_id": 1,
+                    "project_id": 1,
+                    "activity_id": 1,
+                    "task_id": 1
+                },
+                "names": {
+                    "person_fullname": "John Doe",
+                    "project_name": "Website",
+                    "client_name": "ACME",
+                    "activity_name": "Design",
+                    "task_name": "Homepage"
+                }
+            }
+        }
+
++ Response 200 (application/json)
+
+
+        {
+            "Simple_Tracking_RunningEntry": null
+        }
+
+### Available assignments [POST /v1/]
+
+Unlocked assignments from currently running projects.
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: _check_authentication_section_
+    
+    + Body
+
+            {
+                "Simple_Tracking_Assignments": {}
+            }
+
++ Response 200 (application/json)
+
+        {
+            "Simple_Tracking_Assignments": [
+                {
+                    "assignment": {
+                        "person_id": 1,
+                        "project_id": null,
+                        "activity_id": null,
+                        "task_id": null
+                    },
+                    "names": {
+                        "person_fullname": "John Doe",
+                        "project_name": null,
+                        "client_name": null,
+                        "activity_name": null,
+                        "task_name": null
+                    }
+                },
+                {
+                    "assignment": {
+                        "person_id": 1,
+                        "project_id": 1,
+                        "activity_id": 1,
+                        "task_id": 1
+                    },
+                    "names": {
+                        "person_fullname": "John Doe",
+                        "project_name": "Website",
+                        "client_name": "ACME",
+                        "activity_name": "Design",
+                        "task_name": "Homepage"
+                    }
+                }
+            ]
         }
 
 ## Tags [/v1/?Simple_Tags]
