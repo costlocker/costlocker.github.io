@@ -23,6 +23,8 @@ Costlocker is now able to create and update projects via its API.
 
 _**{{ '2018-04-26' | date: '%B %-d, %Y' }}**: we've added [project budgets](#budgets)_
 
+_**{{ '2018-09-11' | date: '%B %-d, %Y' }}**: we've added [no-budget](#no-budget-no_budget)_
+
 ## Project API introduction
 
 We tried to unify the project structure as much as possible.
@@ -256,6 +258,7 @@ We support five budget types since [April  2018](https://costlocker.docs.apiary.
 | `time_estimates.person_activity` | Activity hourly rate * Person hours estimates |
 | `time_estimates.activity` | Activity hourly rate * Activity hours estimate |
 | `timesheet` | Activity hourly rate * Tracked hours |
+| `no_budget` | All tracked hours are non-billable |
 | `fixed_price.activity` | Activity fixed price |
 | `fixed_price.project` | Project fixed price |
 
@@ -316,6 +319,21 @@ Budget is defined in `activity` item:
     "activity": {
         "name": "Social media",
         "hourly_rate": 100
+    }
+}
+```
+
+### No budget (`no_budget`)
+
+Hourly rate or budget amount is ignored. Tracked time is never billed!
+
+```json
+{
+    "item": {
+        "type": "activity"
+    },
+    "activity": {
+        "name": "Social media"
     }
 }
 ```
