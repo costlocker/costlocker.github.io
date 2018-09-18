@@ -120,6 +120,9 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 #### _September 2018_
 
 * Add [**no budget**](https://costlocker.github.io/blog/2017-05-14-import-projects-to-costlocker.html#no-budget-no_budget)
+* **Billable/non-billable hours**
+    * [Time-entries](/#reference/0/time-entries/create/update-time-entries) - set `billable` or `nonbillable` tag
+    * [Simple_Timesheet](/#reference/0/timesheet/filtered-entries) - add `billable` field if request has `withBillable`
 
 ### Data Structures
 
@@ -259,6 +262,10 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 + duration: 3600 (number, required) - duration in seconds
 + description (string, optional) - description
 + assignment (clTimeentryAssignment, required)
++ tags (array, optional)
+    + (enum)
+        + billable
+        + nonbillable
 
 #### clTimeentryAssignment (object)
 + person_id (number, optional) - authenticated person is used if the id is missing
@@ -1415,7 +1422,8 @@ entries from other persons._
                         "assignment": {
                             "project_id": 1,
                             "activity_id": 1
-                        }
+                        },
+                        "tags": "billable"
                     },
                     {
                         "date": "2017-03-28 09:46:00",
@@ -1424,7 +1432,8 @@ entries from other persons._
                         "assignment": {
                             "project_id": 1,
                             "activity_id": 1
-                        }
+                        },
+                        "tags": ["nonbillable"]
                     },
                     {
                         "date": "2017-03-28 09:46:00",
@@ -2456,6 +2465,7 @@ Projects are ordered by `id DESC`.
         + datef (clDate, optional) - only entries created after specific date (Y-m-d)
         + datet (clDate, optional) - only entries created before specific date (Y-m-d)
         + withUuids: false (boolean, optional) - if `true` then `uuid` attribute is returned for each entry
+        + withBillable: false (boolean, optional) - if `true` then `billable` attribute is returned for each entry _(seconds billable)_
         + withRates: false (boolean, optional) - if `true` then `client_rate`, `person_rate`, `person_overhead` attributes are returned (just like in `Simple_Projects_Ce`)
         + limit (number, optional) - pagination, by default all projects are returned
         + offset: 0 (number, optional) - pagination
@@ -2478,6 +2488,7 @@ Projects are ordered by `id DESC`.
                     "datef": "2016-11-01",
                     "datet": "2016-11-30",
                     "withRates": true,
+                    "withBillable": true,
                     "withUuids": true,
                     "limit": 5,
                     "offset": 0
@@ -2497,6 +2508,7 @@ Projects are ordered by `id DESC`.
                     "client": "2",
                     "task": "1",
                     "interval": 1800,
+                    "billable": 1800,
                     "description": "Explore current app",
                     "task_name": "Analysis",
                     "client_rate": 1500.00,
@@ -2512,6 +2524,7 @@ Projects are ordered by `id DESC`.
                     "client": "2",
                     "task": "2",
                     "interval": 9823,
+                    "billable": 0,
                     "description": "Spike solution in Invision",
                     "task_name": "Redesign",
                     "client_rate": 50,
@@ -2527,6 +2540,7 @@ Projects are ordered by `id DESC`.
                     "client":null,
                     "task":null,
                     "interval":7194,
+                    "billable": 3600,
                     "description":"Preparing new project",
                     "task_name":null,
                     "client_rate":null,
