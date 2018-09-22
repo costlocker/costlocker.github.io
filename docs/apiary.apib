@@ -123,6 +123,7 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 * **Billable/non-billable hours**
     * [Time-entries](/#reference/0/time-entries/create/update-time-entries) - set `billable` or `nonbillable` tag
     * [Simple_Timesheet](/#reference/0/timesheet/filtered-entries) - add `billable` field if request has `withBillable`
+* Enable advanced [project `action`](/#reference/0/projects): **delete, finish, reopen**
 
 ### Data Structures
 
@@ -135,6 +136,15 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 #### clLiberalDate (enum)
 + clDate: `2016-12-24` (string) - date
 + clDatetime: `2016-12-24 20:00:50` (string) - date and time
+
+#### clProjectEdit (clProject)
++ action (clProjectAction, optional)
+
+#### clProjectAction (enum[string])
++ upsert - default action, if `action` is not specified
++ delete - delete an project. You can't undo this!
++ finish - finish an running project
++ reopen - reopen an finished project
 
 #### clProject (object)
 + id (number, optional)
@@ -817,7 +827,7 @@ Take look at example requests in Apiary or check
             Authorization: _check_authentication_section_
 
     + Attributes ()
-        + data (array[clProject], required)
+        + data (array[clProjectEdit], required)
 
     + Body
 
@@ -936,6 +946,18 @@ Take look at example requests in Apiary or check
                                 }
                             }
                         ]
+                    },
+                    {
+                        "name": "Deleted project",
+                        "action": "delete"
+                    },
+                    {
+                        "name": "Finished project",
+                        "action": "finish"
+                    },
+                    {
+                        "name": "Reopened project",
+                        "action": "reopen"
                     }
                 ]
             }
@@ -947,10 +969,11 @@ Take look at example requests in Apiary or check
             {
                 "meta": {
                     "created": 1,
-                    "updated": 1
+                    "updated": 4
                 },
                 "data": [
                     {
+                        "action": "upsert",
                         "id": "2084",
                         "items": [],
                         "links": {
@@ -962,6 +985,7 @@ Take look at example requests in Apiary or check
                         }
                     },
                     {
+                        "action": "upsert",
                         "id": "123456",
                         "items": [
                             {
@@ -1025,6 +1049,36 @@ Take look at example requests in Apiary or check
                                 }
                             }
                         ],
+                        "links": {
+                            "project": "https://new.costlocker.com/api-public/v2/projects/123456",
+                            "peoplecosts": "https://new.costlocker.com/api-public/v2/projects/123456?types=peoplecosts",
+                            "billing": "https://new.costlocker.com/api-public/v2/projects/123456?types=billing",
+                            "expenses": "https://new.costlocker.com/api-public/v2/projects/123456?types=expenses",
+                            "discounts": "https://new.costlocker.com/api-public/v2/projects/123456?types=discounts"
+                        }
+                    },
+                    {
+                        "action": "delete",
+                        "id": "2100",
+                        "items": [],
+                        "links": {}
+                    },
+                    {
+                        "action": "finish",
+                        "id": "2101",
+                        "items": [],
+                        "links": {
+                            "project": "https://new.costlocker.com/api-public/v2/projects/123456",
+                            "peoplecosts": "https://new.costlocker.com/api-public/v2/projects/123456?types=peoplecosts",
+                            "billing": "https://new.costlocker.com/api-public/v2/projects/123456?types=billing",
+                            "expenses": "https://new.costlocker.com/api-public/v2/projects/123456?types=expenses",
+                            "discounts": "https://new.costlocker.com/api-public/v2/projects/123456?types=discounts"
+                        }
+                    },
+                    {
+                        "action": "reopen",
+                        "id": "2102",
+                        "items": [],
                         "links": {
                             "project": "https://new.costlocker.com/api-public/v2/projects/123456",
                             "peoplecosts": "https://new.costlocker.com/api-public/v2/projects/123456?types=peoplecosts",
