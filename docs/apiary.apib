@@ -123,7 +123,7 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 * **Billable/non-billable hours**
     * [Time-entries](/#reference/0/time-entries/create/update-time-entries) - set `billable` or `nonbillable` tag
     * [Simple_Timesheet](/#reference/0/timesheet/filtered-entries) - add `billable` field if request has `withBillable`
-* Enable advanced [project `action`](/#reference/0/projects): **delete, finish, reopen**
+* Enable advanced [project `action`](/#reference/0/projects) (**delete, finish, reopen**), editing `project_id`
 
 ### Data Structures
 
@@ -847,6 +847,10 @@ Take look at example requests in Apiary or check
                         "dates": {
                             "date_start": "2017-03-20",
                             "date_end": "2017-05-20"
+                        },
+                        "project_id": {
+                            "is_generated": true,
+                            "id": null
                         },
                         "responsible_people": [
                             "existing@example.com",
