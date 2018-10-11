@@ -103,7 +103,8 @@ If you create a new activity without an hourly rate, zero rate is used.
 ```json
 {
     "item": {
-        "type": "activity"
+        "type": "activity",
+        "activity_id": 123456
     },
     "activity": {
         "name": "Social media",
@@ -120,7 +121,9 @@ The role, salary and names are used only when creating a new person. _An existin
 ```json
 {
     "item": {
-        "type": "person"
+        "type": "person",
+        "activity_id": 123456,
+        "person_id": 123456
     },
     "hours": {
         "budget": 5
@@ -155,7 +158,9 @@ Tasks are assigned to a person and activity. A parent can be referenced by ids i
 {
     "item": {
         "type": "task",
-        "activity_id": 123456
+        "activity_id": 123456,
+        "person_id": 123456,
+        "task_id": 123456
     },
     "hours": {
         "budget": 20
@@ -276,7 +281,9 @@ Take a look at [personnel costs](#personnel-costs).
 ```json
 {
     "item": {
-        "type": "person"
+        "type": "person",
+        "activity_id": 123456,
+        "person_id": 123456
     },
     "activity": {
         "name": "Social media",
@@ -295,7 +302,8 @@ Budget is defined in `activity` item:
 ```json
 {
     "item": {
-        "type": "activity"
+        "type": "activity",
+        "activity_id": 123456
     },
     "activity": {
         "name": "Social media",
@@ -314,7 +322,8 @@ Budget is defined in `activity` item:
 ```json
 {
     "item": {
-        "type": "activity"
+        "type": "activity",
+        "activity_id": 123456
     },
     "activity": {
         "name": "Social media",
@@ -330,7 +339,8 @@ Hourly rate or budget amount is ignored. Tracked time is never billed!
 ```json
 {
     "item": {
-        "type": "activity"
+        "type": "activity",
+        "activity_id": 123456
     },
     "activity": {
         "name": "Social media"
@@ -345,7 +355,8 @@ Budget is defined in `activity` item:
 ```json
 {
     "item": {
-        "type": "activity"
+        "type": "activity",
+        "activity_id": 123456
     },
     "activity": {
         "name": "Social media"
