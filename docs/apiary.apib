@@ -125,6 +125,10 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
     * [Simple_Timesheet](/#reference/0/timesheet/filtered-entries) - add `billable` field if request has `withBillable`
 * Enable advanced [project `action`](/#reference/0/projects) (**delete, finish, reopen**), editing `project_id`
 
+#### _December 2018_
+
+* [Delete time-entry](#reference/0/time-entries/create/update-time-entries)
+
 ### Data Structures
 
 #### clUuid (string, optional) - `87d2a4e5-5a2e-413d-ab4b-5b3771cc03c1`
@@ -265,6 +269,13 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 + `no_budget`
 + `fixed_price.activity`
 + `fixed_price.project`
+
+#### clTimeentryEdit (clTimeentry)
++ action (clTimeentryAction, optional)
+
+#### clTimeentryAction (enum[string])
++ upsert - default action, if `action` is not specified
++ delete - delete an time-entry. You can't undo this!
 
 #### clTimeentry (object)
 + uuid (clUuid, optional) - uuid of new timeentry, existing uuid for updating existing timeentry
@@ -746,22 +757,6 @@ that are able to access Costlocker API.
                         },
                         "links": {
                             "app": "https://new.costlocker.com/api-token"
-                        }
-                    },
-                    {
-                        "app": {
-                            "name": "Company access token (LEGACY)"
-                        },
-                        "token": {
-                            "type": "company_access_token",
-                            "expires": null
-                        },
-                        "company": {
-                            "id": 2,
-                            "name": "My company"
-                        },
-                        "links": {
-                            "app": "https://new.costlocker.com/settings/api"
                         }
                     }
                 ]
@@ -1452,7 +1447,7 @@ entries from other persons._
             + finished_projects (enum, optional)
                 + error - editing entries from finished projects causes an error
                 + reopen - finished project is automatically opened and closed
-        + data (array[clTimeentry], required)
+        + data (array[clTimeentryEdit], required)
 
     + Headers
 
@@ -1496,6 +1491,10 @@ entries from other persons._
                     {
                         "date": "2017-03-28 09:46:00",
                         "duration": null
+                    },
+                    {
+                        "action": "delete",
+                        "uuid": "d85d843e-c2ed-479e-9159-dda5e14177ab"
                     }
                 ]
             }
@@ -1552,6 +1551,16 @@ entries from other persons._
                             "task_id": null
                         },
                         "action": "nothing"
+                    },
+                    {
+                        "uuid": "d85d843e-c2ed-479e-9159-dda5e14177ab",
+                        "assignment": {
+                            "project_id": null,
+                            "activity_id": null,
+                            "person_id": null,
+                            "task_id": null
+                        },
+                        "action": "delete"
                     }
                 ]
             }
