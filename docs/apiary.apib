@@ -129,6 +129,13 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 
 * [Delete time-entry](#reference/0/time-entries/create/update-time-entries)
 
+#### _January 2019_
+
+* **Person client rate** in [projects](/#reference/0/projects)
+    * **[projects](/#reference/0/projects/get-project-detail)** - add `budget.client_rate`, add `activity.hourly_rate` to _person_ item and _task_ item if project has person client rate
+    * **[Simple_Projects](/#reference/0/clients/filtered-projects)** - add `budget.client_rate`
+    * **[Simple_Projects_Ce](/#reference/0/projects-people-costs/filtered-people-costs)** - add `budget_activity.client_rate`
+
 ### Data Structures
 
 #### clUuid (string, optional) - `87d2a4e5-5a2e-413d-ab4b-5b3771cc03c1`
@@ -181,6 +188,7 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
         + (clPerson) - newly created person
 + budget (object, optional)
     + type (clBudgetType, optional)
+    + client_rate (clClientRateType, optional) - defines whether hourly rate is defined per activity or per person/task
 + items (array[clProjectItem], optional)
 
 #### clPerson (object)
@@ -269,6 +277,10 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 + `no_budget`
 + `fixed_price.activity`
 + `fixed_price.project`
+
+#### clClientRateType (enum[string])
++ `activity`
++ `person`
 
 #### clTimeentryEdit (clTimeentry)
 + action (clTimeentryAction, optional)
@@ -863,7 +875,8 @@ Take look at example requests in Apiary or check
                             }
                         ],
                         "budget": {
-                            "type": "time_estimates.person_activity"
+                            "type": "time_estimates.person_activity",
+                            "client_rate": "activity"
                         },
                         "items": [
                             {
@@ -1180,7 +1193,8 @@ if you'd like to load project details for more projects.
                             }
                         ],
                         "budget": {
-                            "type": "time_estimates.person_activity"
+                            "type": "time_estimates.person_activity",
+                            "client_rate": "activity"
                         },
                         "links": {
                             "project": "https://new.costlocker.com/api-public/v2/projects/123456",
@@ -1257,7 +1271,8 @@ Such objects are always upserted if they don't exist or their existing hours bud
                         }
                     ],
                     "budget": {
-                        "type": "time_estimates.person_activity"
+                        "type": "time_estimates.person_activity",
+                        "client_rate": "activity"
                     },
                     "links": {
                         "project": "https://new.costlocker.com/api-public/v2/projects/123456",
@@ -1860,7 +1875,7 @@ But you could already processed the webhook. In that case you might ignore the s
 
     + Body
 
-            {"meta":{"events":{"timeentries.create":1,"timeentries.update":1,"projects.create":1,"peoplecosts.change":1,"expenses.change":1,"billing.change":1}},"links":{"webhook":{"webhook":"https://new.costlocker.com/api-public/v2/webhooks/dd76b5e0-5b74-4a68-b0ad-db6efbed7b9c","example":"https://new.costlocker.com/api-public/v2/webhooks/dd76b5e0-5b74-4a68-b0ad-db6efbed7b9c/test"}},"data":[{"event":"timeentries.create","data":[{"uuid":"139fce1b-c243-4890-b328-ec5d8394e073","date":"2017-06-09T09:53:06+0000","duration":3600,"description":"Init project","assignment":{"person_id":1,"project_id":1,"activity_id":1,"task_id":1},"names":{"person_fullname":"John Doe","project_name":"Website","client_name":"ACME","activity_name":"Design","task_name":"Homepage"}}]},{"event":"timeentries.update","data":[{"uuid":"e74dd664-ac42-473c-beae-e3081640c7a9","date":"2017-06-09T09:53:06+0000","duration":3600,"description":"Init project","assignment":{"person_id":1,"project_id":1,"activity_id":1,"task_id":1},"names":{"person_fullname":"John Doe","project_name":"Website","client_name":"ACME","activity_name":"Design","task_name":"Homepage"}}]},{"event":"projects.create","data":[{"id":1,"name":"Website","state":"running","client":{"id":1,"name":"ACME"},"dates":{"date_start":"2017-06-09","date_end":"2017-07-09"},"project_id":{"id":null,"is_generated":false},"tags":[{"name":"Billable"}],"responsible_people":[{"email":"john@example.com","first_name":"John","last_name":"Doe"}],"budget":{"type":"time_estimates.person_activity"},"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]},{"event":"peoplecosts.change","data":[{"id":1,"items":[{"action":"upsert","item":{"type":"project"},"budget":{"total_amount":null}},{"action":"upsert","item":{"type":"activity","activity_id":1},"activity":{"name":"Design","hourly_rate":100},"hours":{"budget":null},"budget":{"total_amount":null}},{"action":"upsert","item":{"type":"person","activity_id":1,"person_id":1},"hours":{"budget":20},"person":{"email":"test@example.com","first_name":"Tester","last_name":"Test"},"activity":{"name":"Design"}},{"action":"upsert","item":{"type":"task","activity_id":1,"person_id":1,"task_id":1},"hours":{"budget":20},"person":{"email":"test@example.com","first_name":"Tester","last_name":"Test"},"activity":{"name":"Design"},"task":{"name":"Homepage"}},{"action":"delete","item":{"type":"activity","activity_id":2}},{"action":"delete","item":{"type":"person","activity_id":2,"person_id":2},"hours":{"budget":0}},{"action":"delete","item":{"type":"task","activity_id":2,"person_id":2,"task_id":2},"hours":{"budget":0}}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]},{"event":"expenses.change","data":[{"id":1,"items":[{"action":"upsert","item":{"type":"expense","expense_id":1},"expense":{"description":"Invision license","purchased":{"total_amount":2000,"date":"2017-03-28"},"billed":{"total_amount":1000}}},{"action":"delete","item":{"type":"expense","expense_id":2}}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]},{"event":"billing.change","data":[{"id":1,"items":[{"action":"upsert","item":{"type":"billing","billing_id":1},"billing":{"description":"Invoice 2017000019","total_amount":1000,"date":"2017-04-01","status":"sent"}},{"action":"delete","item":{"type":"billing","billing_id":2}}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]}]}
+            {"meta":{"events":{"timeentries.create":1,"timeentries.update":1,"projects.create":1,"peoplecosts.change":1,"expenses.change":1,"billing.change":1}},"links":{"webhook":{"webhook":"https://new.costlocker.com/api-public/v2/webhooks/dd76b5e0-5b74-4a68-b0ad-db6efbed7b9c","example":"https://new.costlocker.com/api-public/v2/webhooks/dd76b5e0-5b74-4a68-b0ad-db6efbed7b9c/test"}},"data":[{"event":"timeentries.create","data":[{"uuid":"139fce1b-c243-4890-b328-ec5d8394e073","date":"2017-06-09T09:53:06+0000","duration":3600,"description":"Init project","assignment":{"person_id":1,"project_id":1,"activity_id":1,"task_id":1},"names":{"person_fullname":"John Doe","project_name":"Website","client_name":"ACME","activity_name":"Design","task_name":"Homepage"}}]},{"event":"timeentries.update","data":[{"uuid":"e74dd664-ac42-473c-beae-e3081640c7a9","date":"2017-06-09T09:53:06+0000","duration":3600,"description":"Init project","assignment":{"person_id":1,"project_id":1,"activity_id":1,"task_id":1},"names":{"person_fullname":"John Doe","project_name":"Website","client_name":"ACME","activity_name":"Design","task_name":"Homepage"}}]},{"event":"projects.create","data":[{"id":1,"name":"Website","state":"running","client":{"id":1,"name":"ACME"},"dates":{"date_start":"2017-06-09","date_end":"2017-07-09"},"project_id":{"id":null,"is_generated":false},"tags":[{"name":"Billable"}],"responsible_people":[{"email":"john@example.com","first_name":"John","last_name":"Doe"}],"budget":{"type":"time_estimates.person_activity","client_rate": "activity"},"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]},{"event":"peoplecosts.change","data":[{"id":1,"items":[{"action":"upsert","item":{"type":"project"},"budget":{"total_amount":null}},{"action":"upsert","item":{"type":"activity","activity_id":1},"activity":{"name":"Design","hourly_rate":100},"hours":{"budget":null},"budget":{"total_amount":null}},{"action":"upsert","item":{"type":"person","activity_id":1,"person_id":1},"hours":{"budget":20},"person":{"email":"test@example.com","first_name":"Tester","last_name":"Test"},"activity":{"name":"Design"}},{"action":"upsert","item":{"type":"task","activity_id":1,"person_id":1,"task_id":1},"hours":{"budget":20},"person":{"email":"test@example.com","first_name":"Tester","last_name":"Test"},"activity":{"name":"Design"},"task":{"name":"Homepage"}},{"action":"delete","item":{"type":"activity","activity_id":2}},{"action":"delete","item":{"type":"person","activity_id":2,"person_id":2},"hours":{"budget":0}},{"action":"delete","item":{"type":"task","activity_id":2,"person_id":2,"task_id":2},"hours":{"budget":0}}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]},{"event":"expenses.change","data":[{"id":1,"items":[{"action":"upsert","item":{"type":"expense","expense_id":1},"expense":{"description":"Invision license","purchased":{"total_amount":2000,"date":"2017-03-28"},"billed":{"total_amount":1000}}},{"action":"delete","item":{"type":"expense","expense_id":2}}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]},{"event":"billing.change","data":[{"id":1,"items":[{"action":"upsert","item":{"type":"billing","billing_id":1},"billing":{"description":"Invoice 2017000019","total_amount":1000,"date":"2017-04-01","status":"sent"}},{"action":"delete","item":{"type":"billing","billing_id":2}}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]}]}
 
 + Response 404 (application/vnd.api+json)
 
@@ -2143,6 +2158,7 @@ Projects are ordered by `id DESC`.
                         "hours_tracked": 250,
                         "budget": {
                             "type": "time_estimates.person_activity",
+                            "client_rate": "activity",
                             "total_amount": 680400.00
                         },
                         "responsible_people": [
@@ -2347,7 +2363,8 @@ Projects are ordered by `id DESC`.
                         "hrs_tracked": 20,
                         "budget_activity": {
                             "total_amount": 30000,
-                            "total_hours": 50
+                            "total_hours": 50,
+                            "client_rate": 1500.00
                         },
                         "client_rate": 1500.00,
                         "person_rate": 1000,
@@ -2373,7 +2390,8 @@ Projects are ordered by `id DESC`.
                         "hrs_tracked": 0,
                         "budget_activity": {
                             "total_amount": 500,
-                            "total_hours": 10
+                            "total_hours": 10,
+                            "client_rate": 50
                         },
                         "client_rate": 50,
                         "person_rate": 50,
@@ -2409,7 +2427,8 @@ Projects are ordered by `id DESC`.
                     "hrs_tracked": 20,
                     "budget_activity": {
                         "amount": 30000,
-                        "hours": 50
+                        "hours": 50,
+                        "client_rate": 1500.00
                     },
                     "client_rate": 1500.00,
                     "person_rate": 1000,
@@ -2435,7 +2454,8 @@ Projects are ordered by `id DESC`.
                     "hrs_tracked": 0,
                     "budget_activity": {
                         "amount": 500,
-                        "hours": 10
+                        "hours": 10,
+                        "client_rate": 50
                     },
                     "client_rate": 50,
                     "person_rate": 500,

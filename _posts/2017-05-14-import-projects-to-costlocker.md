@@ -21,9 +21,11 @@ Costlocker is now able to create and update projects via its API.
 * [API shortcuts](#api-shortcuts)
 * [_Demo_ - Import projects from Harvest](#demo-import-projects-from-harvest)
 
-_**{{ '2018-04-26' | date: '%B %-d, %Y' }}**: we've added [project budgets](#budgets)_
+_Updates_
 
-_**{{ '2018-09-11' | date: '%B %-d, %Y' }}**: we've added [no-budget](#no-budget-no_budget)_
+*  _**{{ '2018-04-26' | date: '%B %Y' }}**: we've added [project budgets](#budgets)_
+* _**{{ '2018-09-11' | date: '%B %Y' }}**: we've added [no-budget](#no-budget-no_budget)_
+* _**{{ '2019-01-09' | date: '%B %Y' }}**: we've added [person client rate](#budget)_
 
 ## Project API introduction
 
@@ -49,11 +51,19 @@ More advanced concepts (personnel costs, billing, &hellip;) are defined in [`ite
    "tags":["Billable"],
    "responsible_people": ["test@example.com"],
    "budget": {
-      "type": "time_estimates.person_activity"
+      "type": "time_estimates.person_activity",
+      "client_rate": "activity"
    },
    "items":[]
 }
 ```
+
+#### Budget
+
+* The `type` contains one of available [project budgets](#budgets)
+* The `client_rate` specifies type of hourly rate _([rate is specified in item's `activity.hourly_rate`](#personnel-costs))_
+    * `activity` - one hourly rate for all people in an activity
+    * `person` - people can have different hourly rates in an activity, an person can even have different hourly rates in tasks
 
 ### Items
 
@@ -165,6 +175,10 @@ Tasks are assigned to a person and activity. A parent can be referenced by ids i
     "hours": {
         "budget": 20
     },
+    "activity": {
+        "name": "Social media",
+        "hourly_rate": 20
+    },
     "task": {
         "name": "new task"
     },
@@ -256,7 +270,7 @@ You can execute partial updates, such as changing the billing status without mod
 
 ## Budgets
 
-We support five budget types since [April  2018](https://costlocker.docs.apiary.io/#introduction/changelog/april-2018):
+We support new budget types since [April  2018](https://costlocker.docs.apiary.io/#introduction/changelog/april-2018):
 
 | `type` | Description |
 | ------ | ----------- |
@@ -267,11 +281,17 @@ We support five budget types since [April  2018](https://costlocker.docs.apiary.
 | `fixed_price.activity` | Activity fixed price |
 | `fixed_price.project` | Project fixed price |
 
-Below you can see what fields are required for each budget type.
+Below you can see what fields are required for each budget type with activity hourly rate.
 You can send for example person hours budget to timesheet budget, but we'll ignore it
 _(webhook would contain zero hours budget)_.
 
-![Budget fields](https://user-images.githubusercontent.com/7994022/39293649-b40244e8-4939-11e8-97eb-1fb5f4a6abe3.png)
+![Budget fields - activity client rate](https://user-images.githubusercontent.com/7994022/39293649-b40244e8-4939-11e8-97eb-1fb5f4a6abe3.png)
+
+Required fields for [person hourly rate](#budget):
+
+![Budget fields - person client rate](https://user-images.githubusercontent.com/7994022/50888522-254a0000-13f6-11e9-8a69-7d3888d7f8b7.png)
+
+_You don't have to worry about different client rate, if you [create just leafs](#personnel-costs)!_
 
 ### Person estimates (`time_estimates.person_activity`)
 
