@@ -136,6 +136,10 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
     * **[Simple_Projects](/#reference/0/clients/filtered-projects)** - add `budget.client_rate`
     * **[Simple_Projects_Ce](/#reference/0/projects-people-costs/filtered-people-costs)** - add `budget_activity.client_rate`
 
+#### _February 2019_
+
+* Person bonuses in [Simple_Overheads](#reference/0/overhead-costs) - https://new.costlocker.com/people/bonuses
+
 ### Data Structures
 
 #### clUuid (string, optional) - `87d2a4e5-5a2e-413d-ab4b-5b3771cc03c1`
@@ -281,6 +285,10 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 #### clClientRateType (enum[string])
 + `activity`
 + `person`
+
+#### clOverheadType (enum[string])
++ `recurring_costs`
++ `person_bonus`
 
 #### clTimeentryEdit (clTimeentry)
 + action (clTimeentryAction, optional)
@@ -2828,14 +2836,19 @@ _**Scopes:** Only ADMIN and OWNER can read overhead costs._
 
 + Request (application/json)
      
-      + Headers
+    + Headers
 
             Authorization: _check_authentication_section_
-    
+
+    + Attributes
+        + type (array[clOverheadType], optional)
+
     + Body
 
             {
-                "Simple_Overheads": {}
+                "Simple_Overheads": {
+                    "type": ["recurring_costs"]
+                }
             }
 
 + Response 200 (application/json)
@@ -2845,14 +2858,44 @@ _**Scopes:** Only ADMIN and OWNER can read overhead costs._
             + id (number, required)
             + name (string, required)
             + amount (number, required)
-            + da_start (clDate, required)
+            + da_start (clDate) - required for recurring costs
             + da_end (clDate)
+            + da (clDate) - required for person bonus
+            + person_id (number) - required for person bonus
 
     + Body
 
-            {
-                "Simple_Overheads": [
-                    {"id":"1","name":"Internet","amount":20,"da_start":"2016-01-01","da_end":"2016-12-31"},
-                    {"id":"2","name":"Cell phones","amount":100,"da_start":"2016-11-01","da_end":null}
-                ]
-            }
+        {
+            "Simple_Overheads": [
+                {
+                    "id": "1",
+                    "name": "Internet",
+                    "amount": 20,
+                    "da_start": "2016-01-01",
+                    "da_end": "2016-12-31",
+                    "da": null,
+                    "person_id": null,
+                    "type": "recurring_costs"
+                },
+                {
+                    "id": "2",
+                    "name": "Cell phones",
+                    "amount": 100,
+                    "da_start": "2016-11-01",
+                    "da_end": null,
+                    "da": null,
+                    "person_id": null,
+                    "type": "recurring_costs"
+                },
+                {
+                    "id": "3",
+                    "name": "Christmas 2018",
+                    "amount": 50,
+                    "da_start": null,
+                    "da_end": null,
+                    "da": "2018-12-24",
+                    "person_id": 1,
+                    "type": "person_bonus"
+                }
+            ]
+        }
