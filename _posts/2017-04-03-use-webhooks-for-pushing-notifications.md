@@ -33,7 +33,7 @@ CL_WEBHOOK="UUID_OF_EXISTING_WEBHOOK (create variable after first step)"
 
 ### 1. Create webhooks
 
-Let's prepare webhooks request. I recommend using [http://requestb.in/](http://requestb.in/)
+Let's prepare webhooks request. I recommend using [https://requestbin.com/](https://requestbin.com/)
 for testing webhooks before you start writing production integration.
 
 ```bash
@@ -85,7 +85,7 @@ This article isn't about creating time entries. So we expect that you somehow ed
 
 Immediately after editing entries you should see webhook event in `requestb.in`:
 
-![requestb.in example](https://cloud.githubusercontent.com/assets/7994022/24615706/4feb7370-188f-11e7-859d-64b600c27e03.png)
+![requestbin.com example](https://cloud.githubusercontent.com/assets/7994022/24615706/4feb7370-188f-11e7-859d-64b600c27e03.png)
 
 _**Tip**: use [/webhooks/uuid/test](http://docs.costlocker.apiary.io/#reference/0/webhooks/get-webhook-example) endpoint 
 for getting event structure without triggering any change._
