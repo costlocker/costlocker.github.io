@@ -45,7 +45,7 @@ _webhooks-request.json_
 ```json
 [
    {
-      "url":"http://requestb.in/123v1fw1?all",
+      "url":"https://enivpfhlz5el.x.pipedream.net",
       "events":[
          "timeentries.create",
          "timeentries.update"
