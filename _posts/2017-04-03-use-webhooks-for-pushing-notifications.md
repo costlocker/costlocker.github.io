@@ -110,7 +110,7 @@ Check [slack documentation](https://api.slack.com/incoming-webhooks) if you've n
 Don't forget to transform Costlocker events to
 [Slack message](https://api.slack.com/incoming-webhooks#advanced_message_formatting).
 You can test it [without a running server](https://gist.github.com/costlockerbot/db92c7f2064930660b088e7687558221)
-by copy-pasting payload from [http://requestb.in/](http://requestb.in/).
+by copy-pasting payload from [https://requestbin.com/](https://requestbin.com/).
 Or test your message in [Message Builder](https://api.slack.com/docs/messages/builder).
 
 ![Slack message preview](https://cloud.githubusercontent.com/assets/26380189/24649765/700b1c7a-1928-11e7-9753-0445bb7dddbc.png)
