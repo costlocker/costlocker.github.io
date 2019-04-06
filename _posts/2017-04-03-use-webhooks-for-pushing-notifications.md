@@ -8,7 +8,7 @@ links:
   Blog: "/blog/"
   Webhooks API: http://docs.costlocker.apiary.io/#reference/0/webhooks
   Slack API: https://api.slack.com/incoming-webhooks
-  Webhooks debugger: https://requestb.in
+  Webhooks debugger: https://requestbin.com
   Example code: https://gist.github.com/costlockerbot/db92c7f2064930660b088e7687558221
 ---
 
@@ -83,7 +83,7 @@ This article isn't about creating time entries. So we expect that you somehow ed
 
 ### 3. Receive webhooks
 
-Immediately after editing entries you should see webhook event in `requestb.in`:
+Immediately after editing entries you should see webhook event in `requestbin.com`:
 
 ![requestbin.com example](https://cloud.githubusercontent.com/assets/7994022/24615706/4feb7370-188f-11e7-859d-64b600c27e03.png)
 
