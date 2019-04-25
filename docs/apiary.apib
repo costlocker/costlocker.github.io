@@ -140,6 +140,10 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 
 * Person bonuses in [Simple_Overheads](#reference/0/overhead-costs) - https://new.costlocker.com/people/bonuses
 
+#### _April 2019_
+
+* [Simple_Groups](#reference/0/groups) - https://new.costlocker.com/settings/groups
+
 ### Data Structures
 
 #### clUuid (string, optional) - `87d2a4e5-5a2e-413d-ab4b-5b3771cc03c1`
@@ -2076,6 +2080,34 @@ They cannot see all projects and timesheets, salaries, rates, revenues, billing 
             ]
         }
 
+## Groups [/v1/?Simple_Groups]
+
+### List of groups with assigned people and activities [POST /v1/]
+
++ Request (application/json)
+     
+      + Headers
+
+            Authorization: _check_authentication_section_
+    
+    + Body
+
+            {
+                "Simple_Groups": {}
+            }
+
++ Response 200 (application/json)
+
+        {
+            "Simple_Groups": [
+                { 
+                    "id": "1", 
+                    "name": "Design",
+                    "person": [1],
+                    "activity": []
+                }
+            ]
+        }
 
 ## Clients [/v1/?Simple_Clients]
 
