@@ -143,6 +143,7 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 #### _April 2019_
 
 * [Simple_Groups](#reference/0/groups) - https://new.costlocker.com/settings/groups
+* [**Recurring projects**](#reference/0/projects/get-projects) - `recurring`, `project_type` in project detail, `recurring_project` in `links` _([check blog](https://costlocker.github.io/blog/2017-05-14-import-projects-to-costlocker.html#recurring-projects))_
 
 ### Data Structures
 
@@ -169,6 +170,13 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 + id (number, optional)
 + name (string, required)
 + state (clProjectState, optional)
++ project_type (clProjectType, optional)
++ recurring (object, optional) - 
+    + id (string) - id of parent recurring project
+    + settings (object, optional) - for recurring project
+        + frequency (clRecurringPeriod, required)
+        + date_start (clLiberalDate, required)
+        + date_end (clLiberalDate, required)
 + client (enum, required)
     + string - client name (case insensitive)
     + number - client id
@@ -277,6 +285,15 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 #### clProjectState (enum[string])
 + `running`
 + `finished`
+
+#### clProjectType (enum[string])
++ `standard`
++ `recurring`
+
+#### clRecurringPeriod (enum[string])
++ `monthly`
++ `quarterly`
++ `yearly`
 
 #### clBudgetType (enum[string])
 + `time_estimates.person_activity`
@@ -839,6 +856,8 @@ We also recommend using existing projects as template for updating projects.
 Take look at example requests in Apiary or check 
 [our blog about Projects API](https://costlocker.github.io/blog/2017-05-14-import-projects-to-costlocker.html)
 
+_A new recurring project can't be created in API. But you can edit an existing recurring project, just like a standard project._
+
 + Request (application/vnd.api+json)
 
     + Headers
@@ -1131,7 +1150,7 @@ Take look at example requests in Apiary or check
                 ]
             }
 
-### Get projects [GET /v2/projects/{?page,state,types}]
+### Get projects [GET /v2/projects/{?page,state,project_type,types}]
 
 Alternative display of [projects list from v1](http://docs.costlocker.apiary.io/#reference/0/projects/).
 If you unset `id` you can use it as template for creating a new project.
@@ -1148,6 +1167,10 @@ if you'd like to load project details for more projects.
     + state (clProjectState, optional)
         + running
         + finished
+    + project_type (clProjectType, optional)
+        + `` - by default only standard projects are returned
+        + standard
+        + recurring
     + types (enum, optional)
         + `` - by default no items are returned
         + peoplecosts
@@ -1187,6 +1210,11 @@ if you'd like to load project details for more projects.
                         "dates": {
                             "date_start": "2017-03-20",
                             "date_end": "2017-05-20"
+                        },
+                        "project_type": "standard",
+                        "recurring": {
+                           "id": null,
+                           "settings": null
                         },
                         "project_id": {
                             "id": null,
@@ -1265,6 +1293,11 @@ Such objects are always upserted if they don't exist or their existing hours bud
                     "dates": {
                         "date_start": "2017-03-20",
                         "date_end": "2017-05-20"
+                    },
+                    "project_type": "standard",
+                    "recurring": {
+                       "id": null,
+                       "settings": null
                     },
                     "project_id": {
                         "id": null,
@@ -2149,10 +2182,9 @@ Projects are ordered by `id DESC`.
 
     + Attributes
         + project (array[number], optional) - list of project ids
-        + state (enum, optional)
-            + running
-            + finished
-        + recurring: false (boolean, optional) - if recurring projects are included
+        + state (clProjectState, optional)
+        + project_type (clProjectType, optional)
+            + `` - by default only standard projects are returned
         + limit (number, optional) - pagination, by default all projects are returned
         + offset: 0 (number, optional) - pagination
 
@@ -2187,6 +2219,11 @@ Projects are ordered by `id DESC`.
                         "name": "GMail Redesign",
                         "client_id": "1",
                         "state": "running",
+                        "project_type": "standard",
+                        "recurring": {
+                           "id": null,
+                           "settings": null
+                        },
                         "jobid": 1400001,
                         "da_start": "2014-10-24",
                         "da_end": "2014-12-24",
@@ -2253,6 +2290,11 @@ Projects are ordered by `id DESC`.
                         "name": "GMail Redesign",
                         "client_id": "1",
                         "state": "running",
+                        "project_type": "standard",
+                        "recurring": {
+                           "id": null,
+                           "settings": null
+                        },
                         "jobid": 1400001,
                         "da_start": "2014-10-24",
                         "da_end": "2014-12-24",

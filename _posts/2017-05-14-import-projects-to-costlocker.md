@@ -26,6 +26,7 @@ _Updates_
 *  _**{{ '2018-04-26' | date: '%B %Y' }}**: we've added [project budgets](#budgets)_
 * _**{{ '2018-09-11' | date: '%B %Y' }}**: we've added [no-budget](#no-budget-no_budget)_
 * _**{{ '2019-01-09' | date: '%B %Y' }}**: we've added [person client rate](#budget)_
+* _**{{ '2019-04-26' | date: '%B %Y' }}**: we've added [recurring projects](#recurring-projects), [progress and billable exceeded estimates](#budget)_
 
 ## Project API introduction
 
@@ -48,15 +49,85 @@ More advanced concepts (personnel costs, billing, &hellip;) are defined in [`ite
       "date_start":"2017-03-20",
       "date_end":"2017-05-20"
    },
+   "state": "running",
+   "project_type": "standard",
+   "recurring": {
+      "id": null,
+      "settings": null
+   },
+   "project_id": {
+      "id": null,
+      "is_generated": false
+   },
    "tags":["Billable"],
    "responsible_people": ["test@example.com"],
    "budget": {
       "type": "time_estimates.person_activity",
-      "client_rate": "activity"
+      "client_rate": "activity",
+      "progress_type": null,
+      "bill_exceeded_estimates": false
    },
    "items":[]
 }
 ```
+
+#### Recurring projects
+
+_Read-only! Not editable in API. E.g. you can't create a new recurring project in API._
+
+* The `project_type` is one of:
+    * [`standard`](https://help.costlocker.com/en/creating-closing-and-duplicating-projects/creating-standard-projects) -
+      has a clearly defined start and end. This is typical for projects such as websites or mobile apps. 
+    * [`recurring`](https://help.costlocker.com/en/creating-closing-and-duplicating-projects/creating-recurring-projects) - 
+      useful for fee-based and internal projects that will automatically get created each month/quarter/year.
+* The `recurring` contains more detailed info:
+    * `id` is filled for `standard` projects created from `recurring` project
+    * `settings` is filled `recurring` projects, it's not editable in API
+
+###### Recurring project example
+
+```json
+{
+   "id": 123,
+   "name":"Parent project",
+   "project_type": "recurring",
+   "recurring": {
+      "id": null,
+      "settings": {
+        "frequency": "monthly",
+        "date_start": "2019-01-01",
+        "date_end": null
+      }
+   },
+   "links": {
+     "project": "https://new.costlocker.com/api-public/v2/projects/123"
+   }
+}
+```
+
+###### Standard project created from recurring project
+
+```json
+{
+   "id": 456,
+   "name":"Child project",
+   "project_type": "standard",
+   "recurring": {
+      "id": 123,
+      "settings": null
+   },
+   "links": {
+     "project": "https://new.costlocker.com/api-public/v2/projects/456",
+     "recurring_project": "https://new.costlocker.com/api-public/v2/projects/123"
+   }
+}
+```
+
+#### Other project settings
+
+* The `state` is read-only, it can't be updated. Use [project's `action`](https://costlocker.docs.apiary.io/#reference/0/projects/create/update-projects) 
+  to finish an running project or reopen an finished project.
+* The `project_id` configures custom project id. Use `is_generated: true` if you'd like to use [Auto ID](https://help.costlocker.com/en/creating-closing-and-duplicating-projects/auto-id).
 
 #### Budget
 
