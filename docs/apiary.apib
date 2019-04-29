@@ -144,6 +144,9 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 
 * [Simple_Groups](#reference/0/groups) - https://new.costlocker.com/settings/groups
 * [**Recurring projects**](#reference/0/projects/get-projects) - `recurring`, `project_type` in project detail, `recurring_project` in `links` _([check blog](https://costlocker.github.io/blog/2017-05-14-import-projects-to-costlocker.html#recurring-projects))_
+* Advanced **budgets** settings - `progress_type`, `bill_exceeded_estimates`
+    * **Breaking change:** `hrs_budget` is now used only for user-estimated hours, timesheet and fixed-price budgets has billable hours in new field `hrs_billable`
+* Ignore `revenue >= billing` check for [upserted projects](/#reference/0/projects/create/update-projects) by `meta.ignore_revenue_billing_check`
 
 ### Data Structures
 
@@ -205,6 +208,8 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 + budget (object, optional)
     + type (clBudgetType, optional)
     + client_rate (clClientRateType, optional) - defines whether hourly rate is defined per activity or per person/task
+    + progress_type (clBudgetTypeProgress, optional) - enables estimated hours for tracking progress in budgets without estimates
+    + bill_exceeded_estimates (boolean, optional) - can increase revenue for budgets with time-estimates
 + items (array[clProjectItem], optional)
 
 #### clPerson (object)
@@ -295,13 +300,15 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 + `quarterly`
 + `yearly`
 
-#### clBudgetType (enum[string])
-+ `time_estimates.person_activity`
-+ `time_estimates.activity`
+#### clBudgetType (clBudgetTypeProgress)
 + `timesheet`
-+ `no_budget`
 + `fixed_price.activity`
 + `fixed_price.project`
+
+#### clBudgetTypeProgress (enum[string])
++ `time_estimates.person_activity`
++ `time_estimates.activity`
++ `no_budget`
 
 #### clClientRateType (enum[string])
 + `activity`
@@ -865,6 +872,8 @@ _A new recurring project can't be created in API. But you can edit an existing r
             Authorization: _check_authentication_section_
 
     + Attributes ()
+        + meta
+            + ignore_revenue_billing_check (boolean, optional) - enables ignoring `revenue >= billing` check for upserted projects (useful for importing timesheet projects)
         + data (array[clProjectEdit], required)
 
     + Body
@@ -907,7 +916,9 @@ _A new recurring project can't be created in API. But you can edit an existing r
                         ],
                         "budget": {
                             "type": "time_estimates.person_activity",
-                            "client_rate": "activity"
+                            "client_rate": "activity",
+                            "progress_type": null,
+                            "bill_exceeded_estimates": false
                         },
                         "items": [
                             {
@@ -1234,7 +1245,9 @@ if you'd like to load project details for more projects.
                         ],
                         "budget": {
                             "type": "time_estimates.person_activity",
-                            "client_rate": "activity"
+                            "client_rate": "activity",
+                            "progress_type": null,
+                            "bill_exceeded_estimates": false
                         },
                         "links": {
                             "project": "https://new.costlocker.com/api-public/v2/projects/123456",
@@ -1317,7 +1330,9 @@ Such objects are always upserted if they don't exist or their existing hours bud
                     ],
                     "budget": {
                         "type": "time_estimates.person_activity",
-                        "client_rate": "activity"
+                        "client_rate": "activity",
+                        "progress_type": null,
+                        "bill_exceeded_estimates": false
                     },
                     "links": {
                         "project": "https://new.costlocker.com/api-public/v2/projects/123456",
@@ -1343,6 +1358,7 @@ Such objects are always upserted if they don't exist or their existing hours bud
                             "hours": {
                                 "budget": 40,
                                 "tracked": 0,
+                                "billable": 40,
                                 "is_aggregation": true
                             },
                             "budget": {
@@ -1362,6 +1378,7 @@ Such objects are always upserted if they don't exist or their existing hours bud
                             "hours": {
                                 "budget": 40,
                                 "tracked": 0,
+                                "billable": 40,
                                 "is_aggregation": false
                             },
                             "person": {
@@ -1378,6 +1395,7 @@ Such objects are always upserted if they don't exist or their existing hours bud
                             "hours": {
                                 "budget": 20,
                                 "tracked": 0,
+                                "billable": 20,
                                 "is_aggregation": true
                             },
                             "budget": {
@@ -1397,6 +1415,7 @@ Such objects are always upserted if they don't exist or their existing hours bud
                             "hours": {
                                 "budget": 20,
                                 "tracked": 0,
+                                "billable": 20,
                                 "is_aggregation": true
                             },
                             "person": {
@@ -1415,6 +1434,7 @@ Such objects are always upserted if they don't exist or their existing hours bud
                             "hours": {
                                 "budget": 10,
                                 "tracked": 0,
+                                "billable": 10,
                                 "is_aggregation": false
                             },
                             "task": {
@@ -1431,6 +1451,7 @@ Such objects are always upserted if they don't exist or their existing hours bud
                             "hours": {
                                 "budget": 10,
                                 "tracked": 0,
+                                "billable": 10,
                                 "is_aggregation": false
                             },
                             "task": {
@@ -1920,7 +1941,7 @@ But you could already processed the webhook. In that case you might ignore the s
 
     + Body
 
-            {"meta":{"events":{"timeentries.create":1,"timeentries.update":1,"projects.create":1,"peoplecosts.change":1,"expenses.change":1,"billing.change":1}},"links":{"webhook":{"webhook":"https://new.costlocker.com/api-public/v2/webhooks/dd76b5e0-5b74-4a68-b0ad-db6efbed7b9c","example":"https://new.costlocker.com/api-public/v2/webhooks/dd76b5e0-5b74-4a68-b0ad-db6efbed7b9c/test"}},"data":[{"event":"timeentries.create","data":[{"uuid":"139fce1b-c243-4890-b328-ec5d8394e073","date":"2017-06-09T09:53:06+0000","duration":3600,"description":"Init project","assignment":{"person_id":1,"project_id":1,"activity_id":1,"task_id":1},"names":{"person_fullname":"John Doe","project_name":"Website","client_name":"ACME","activity_name":"Design","task_name":"Homepage"}}]},{"event":"timeentries.update","data":[{"uuid":"e74dd664-ac42-473c-beae-e3081640c7a9","date":"2017-06-09T09:53:06+0000","duration":3600,"description":"Init project","assignment":{"person_id":1,"project_id":1,"activity_id":1,"task_id":1},"names":{"person_fullname":"John Doe","project_name":"Website","client_name":"ACME","activity_name":"Design","task_name":"Homepage"}}]},{"event":"projects.create","data":[{"id":1,"name":"Website","state":"running","client":{"id":1,"name":"ACME"},"dates":{"date_start":"2017-06-09","date_end":"2017-07-09"},"project_id":{"id":null,"is_generated":false},"tags":[{"name":"Billable"}],"responsible_people":[{"email":"john@example.com","first_name":"John","last_name":"Doe"}],"budget":{"type":"time_estimates.person_activity","client_rate": "activity"},"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]},{"event":"peoplecosts.change","data":[{"id":1,"items":[{"action":"upsert","item":{"type":"project"},"budget":{"total_amount":null}},{"action":"upsert","item":{"type":"activity","activity_id":1},"activity":{"name":"Design","hourly_rate":100},"hours":{"budget":null},"budget":{"total_amount":null}},{"action":"upsert","item":{"type":"person","activity_id":1,"person_id":1},"hours":{"budget":20},"person":{"email":"test@example.com","first_name":"Tester","last_name":"Test"},"activity":{"name":"Design"}},{"action":"upsert","item":{"type":"task","activity_id":1,"person_id":1,"task_id":1},"hours":{"budget":20},"person":{"email":"test@example.com","first_name":"Tester","last_name":"Test"},"activity":{"name":"Design"},"task":{"name":"Homepage"}},{"action":"delete","item":{"type":"activity","activity_id":2}},{"action":"delete","item":{"type":"person","activity_id":2,"person_id":2},"hours":{"budget":0}},{"action":"delete","item":{"type":"task","activity_id":2,"person_id":2,"task_id":2},"hours":{"budget":0}}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]},{"event":"expenses.change","data":[{"id":1,"items":[{"action":"upsert","item":{"type":"expense","expense_id":1},"expense":{"description":"Invision license","purchased":{"total_amount":2000,"date":"2017-03-28"},"billed":{"total_amount":1000}}},{"action":"delete","item":{"type":"expense","expense_id":2}}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]},{"event":"billing.change","data":[{"id":1,"items":[{"action":"upsert","item":{"type":"billing","billing_id":1},"billing":{"description":"Invoice 2017000019","total_amount":1000,"date":"2017-04-01","status":"sent"}},{"action":"delete","item":{"type":"billing","billing_id":2}}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]}]}
+            {"meta":{"events":{"timeentries.create":1,"timeentries.update":1,"projects.create":1,"peoplecosts.change":1,"expenses.change":1,"billing.change":1}},"links":{"webhook":{"webhook":"https://new.costlocker.com/api-public/v2/webhooks/dd76b5e0-5b74-4a68-b0ad-db6efbed7b9c","example":"https://new.costlocker.com/api-public/v2/webhooks/dd76b5e0-5b74-4a68-b0ad-db6efbed7b9c/test"}},"data":[{"event":"timeentries.create","data":[{"uuid":"139fce1b-c243-4890-b328-ec5d8394e073","date":"2017-06-09T09:53:06+0000","duration":3600,"description":"Init project","assignment":{"person_id":1,"project_id":1,"activity_id":1,"task_id":1},"names":{"person_fullname":"John Doe","project_name":"Website","client_name":"ACME","activity_name":"Design","task_name":"Homepage"}}]},{"event":"timeentries.update","data":[{"uuid":"e74dd664-ac42-473c-beae-e3081640c7a9","date":"2017-06-09T09:53:06+0000","duration":3600,"description":"Init project","assignment":{"person_id":1,"project_id":1,"activity_id":1,"task_id":1},"names":{"person_fullname":"John Doe","project_name":"Website","client_name":"ACME","activity_name":"Design","task_name":"Homepage"}}]},{"event":"projects.create","data":[{"id":1,"name":"Website","state":"running","client":{"id":1,"name":"ACME"},"dates":{"date_start":"2017-06-09","date_end":"2017-07-09"},"project_type": "standard","recurring": {"id": null,"settings": null},"project_id":{"id":null,"is_generated":false},"tags":[{"name":"Billable"}],"responsible_people":[{"email":"john@example.com","first_name":"John","last_name":"Doe"}],"budget":{"type":"time_estimates.person_activity","client_rate": "activity","progress_type": null, "bill_exceeded_estimates": false},"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]},{"event":"peoplecosts.change","data":[{"id":1,"items":[{"action":"upsert","item":{"type":"project"},"budget":{"total_amount":null}},{"action":"upsert","item":{"type":"activity","activity_id":1},"activity":{"name":"Design","hourly_rate":100},"hours":{"budget":null},"budget":{"total_amount":null}},{"action":"upsert","item":{"type":"person","activity_id":1,"person_id":1},"hours":{"budget":20},"person":{"email":"test@example.com","first_name":"Tester","last_name":"Test"},"activity":{"name":"Design"}},{"action":"upsert","item":{"type":"task","activity_id":1,"person_id":1,"task_id":1},"hours":{"budget":20},"person":{"email":"test@example.com","first_name":"Tester","last_name":"Test"},"activity":{"name":"Design"},"task":{"name":"Homepage"}},{"action":"delete","item":{"type":"activity","activity_id":2}},{"action":"delete","item":{"type":"person","activity_id":2,"person_id":2},"hours":{"budget":0}},{"action":"delete","item":{"type":"task","activity_id":2,"person_id":2,"task_id":2},"hours":{"budget":0}}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]},{"event":"expenses.change","data":[{"id":1,"items":[{"action":"upsert","item":{"type":"expense","expense_id":1},"expense":{"description":"Invision license","purchased":{"total_amount":2000,"date":"2017-03-28"},"billed":{"total_amount":1000}}},{"action":"delete","item":{"type":"expense","expense_id":2}}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]},{"event":"billing.change","data":[{"id":1,"items":[{"action":"upsert","item":{"type":"billing","billing_id":1},"billing":{"description":"Invoice 2017000019","total_amount":1000,"date":"2017-04-01","status":"sent"}},{"action":"delete","item":{"type":"billing","billing_id":2}}],"links":{"project":"https://new.costlocker.com/api-public/v2/projects/1","peoplecosts":"https://new.costlocker.com/api-public/v2/projects/1?types=peoplecosts","billing":"https://new.costlocker.com/api-public/v2/projects/1?types=billing","expenses":"https://new.costlocker.com/api-public/v2/projects/1?types=expenses","discounts":"https://new.costlocker.com/api-public/v2/projects/1?types=discounts"}}]}]}
 
 + Response 404 (application/vnd.api+json)
 
@@ -2233,9 +2254,12 @@ Projects are ordered by `id DESC`.
                         "billed": 85000.00,
                         "hours_budgeted": 480,
                         "hours_tracked": 250,
+                        "hours_billable": 480,
                         "budget": {
                             "type": "time_estimates.person_activity",
                             "client_rate": "activity",
+                            "progress_type": null,
+                            "bill_exceeded_estimates": false,
                             "total_amount": 680400.00
                         },
                         "responsible_people": [
@@ -2304,6 +2328,7 @@ Projects are ordered by `id DESC`.
                         "billed": 85000.00,
                         "hours_budgeted": 480,
                         "hours_tracked": 250,
+                        "hours_billable": 480,
                         "budget": {
                             "type": "time_estimates.person_activity",
                             "total_amount": 680400.00
@@ -2443,9 +2468,11 @@ Projects are ordered by `id DESC`.
                         "person_id": "1",
                         "hrs_budget": 50,
                         "hrs_tracked": 20,
+                        "hrs_billable": 50,
                         "budget_activity": {
                             "total_amount": 30000,
                             "total_hours": 50,
+                            "total_hours_billable": 50,
                             "client_rate": 1500.00
                         },
                         "client_rate": 1500.00,
@@ -2470,9 +2497,11 @@ Projects are ordered by `id DESC`.
                         "person_id": "1",
                         "hrs_budget": 10,
                         "hrs_tracked": 0,
+                        "hrs_billable": 10,
                         "budget_activity": {
                             "total_amount": 500,
                             "total_hours": 10,
+                            "total_hours_billable": 10,
                             "client_rate": 50
                         },
                         "client_rate": 50,
@@ -2507,9 +2536,11 @@ Projects are ordered by `id DESC`.
                     "person_id": "1",
                     "hrs_budget": 50,
                     "hrs_tracked": 20,
+                    "hrs_billable": 50,
                     "budget_activity": {
-                        "amount": 30000,
-                        "hours": 50,
+                        "total_amount": 30000,
+                        "total_hours": 50,
+                        "total_hours_billable": 50,
                         "client_rate": 1500.00
                     },
                     "client_rate": 1500.00,
@@ -2534,9 +2565,11 @@ Projects are ordered by `id DESC`.
                     "person_id": "1",
                     "hrs_budget": 10,
                     "hrs_tracked": 0,
+                    "hrs_billable": 10,
                     "budget_activity": {
-                        "amount": 500,
-                        "hours": 10,
+                        "total_amount": 500,
+                        "total_hours": 10,
+                        "total_hours_billable": 10,
                         "client_rate": 50
                     },
                     "client_rate": 50,
