@@ -19,13 +19,18 @@
 
 - name: Integrations for developers
   apps:
+      - name: Synchronize tracking
+        description: Synchronize tracking from PM (Wrike, EasyProject) to Costlocker
+        web: https://gitlab.com/costlocker/integrations/tree/master/pm
+        code: https://gitlab.com/costlocker/integrations/tree/master/pm
+        icon: https://www.logolynx.com/images/logolynx/be/be54cd7758e913aa7244b77da3317d16.png
       - name: Webhooks
         description: Manage webhooks and see how our API works
         web: https://webhooks.integrations.costlocker.com/
         code: https://gitlab.com/costlocker/integrations/tree/master/webhooks
         icon: https://a.slack-edge.com/ae7f/img/services/outgoing-webhook_512.png
-      - name: Profitability reports generator (PHP)
-        description: Generate XLSX profitability reports from Costlocker API
-        web: https://github.com/costlocker/reports
+      - name: Reports generator (PHP)
+        description: Generate XLSX/HTML reports from Costlocker API
+        web: https://reports.costlocker.com
         code: https://github.com/costlocker/reports
         icon: http://www.freeiconspng.com/uploads/excel-spreadsheet-icon-file-type-xls-icon-18.png
