@@ -67,12 +67,12 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 #### _August 2017_
 
 * **[webhooks](/#reference/0/webhooks)** enable/disable webhook via [`is_enabled`], don't send webhooks with no events
-* fix ordering [`peoplecosts` in project detail](/#reference/0/projects/get-project-detail) and [`Simple_Projects_Ce`](/#reference/0/projects-people-costs/filtered-people-costs)
+* fix ordering [`peoplecosts` in project detail](/#reference/0/projects/get-project-detail) and [`Simple_Projects_Ce`](/#reference/0/projects-v1/projects-people)
 
 #### _December 2017_
 
 * add **person id** to [user detail](#reference/0/me/user-detail)
-* [Simple_Timesheet](/#reference/0/timesheet/filtered-entries) - filter by `uuid`, filter running entries by `isRunning`, return `uuid` if request has **withUuids**
+* [Simple_Timesheet](/#reference/0/tracking/timesheet) - filter by `uuid`, filter running entries by `isRunning`, return `uuid` if request has **withUuids**
 * start **tracking** if [`duration = null`](/#reference/0/time-entries/create/update-time-entries)
 
 #### _January 2018_
@@ -105,8 +105,8 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 * Project budgets - [blog](https://costlocker.github.io/blog/2017-05-14-import-projects-to-costlocker.html#budgets), [doc diff](https://github.com/costlocker/costlocker.github.io/commit/5f454cb), [webhook diff](https://www.diffchecker.com/QHGKh071)
     * **[projects](/#reference/0/projects/get-project-detail)** - add `budget.type`, add `budget.total_amount` to _activity_ item, add _project_ item with `budget.total_amount`
     * **[webhooks](/#reference/0/webhooks/get-webhook-example)** - add `hours.budget`, `budget.total_amount` to _activity_ item, _project_ item for fixed priced project
-    * **[Simple_Projects](/#reference/0/clients/filtered-projects)** - add `budget.type`, `budget.total_amount`
-    * **[Simple_Projects_Ce](/#reference/0/projects-people-costs/filtered-people-costs)** - add `budget_activity.total_amount`, `budget_activity.total_hours`
+    * **[Simple_Projects](/#reference/0/projects-v1/projects-list)** - add `budget.type`, `budget.total_amount`
+    * **[Simple_Projects_Ce](/#reference/0/projects-v1/projects-people)** - add `budget_activity.total_amount`, `budget_activity.total_hours`
 
 #### _May 2018_
 
@@ -122,8 +122,8 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 * Add [**no budget**](https://costlocker.github.io/blog/2017-05-14-import-projects-to-costlocker.html#no-budget-no_budget)
 * **Billable/non-billable hours**
     * [Time-entries](/#reference/0/time-entries/create/update-time-entries) - set `billable` or `nonbillable` tag
-    * [Simple_Timesheet](/#reference/0/timesheet/filtered-entries) - add `billable` field if request has `withBillable`
-* Enable advanced [project `action`](/#reference/0/projects) (**delete, finish, reopen**), editing `project_id`
+    * [Simple_Timesheet](/#reference/0/tracking/timesheet) - add `billable` field if request has `withBillable`
+* Enable advanced [project `action`](/#reference/0/projects/create/update-projects) (**delete, finish, reopen**), editing `project_id`
 
 #### _December 2018_
 
@@ -133,8 +133,8 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 
 * **Person client rate** in [projects](/#reference/0/projects)
     * **[projects](/#reference/0/projects/get-project-detail)** - add `budget.client_rate`, add `activity.hourly_rate` to _person_ item and _task_ item if project has person client rate
-    * **[Simple_Projects](/#reference/0/clients/filtered-projects)** - add `budget.client_rate`
-    * **[Simple_Projects_Ce](/#reference/0/projects-people-costs/filtered-people-costs)** - add `budget_activity.client_rate`
+    * **[Simple_Projects](/#reference/0/projects-v1/projects-list)** - add `budget.client_rate`
+    * **[Simple_Projects_Ce](/#reference/0/projects-v1/projects-people)** - add `budget_activity.client_rate`
 
 #### _February 2019_
 
@@ -147,6 +147,18 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 * Advanced **budgets** settings - `progress_type`, `bill_exceeded_estimates`
     * **Breaking change:** `hrs_budget` is now used only for user-estimated hours, timesheet and fixed-price budgets has billable hours in new field `hrs_billable`
 * Ignore `revenue >= billing` check for [upserted projects](/#reference/0/projects/create/update-projects) by `meta.ignore_revenue_billing_check`
+
+#### _July 2019_
+
+* Filter [`Simple_Projects`](/#reference/0/projects-v1/projects-list) by **`client`**
+* **New attributes in Simple API**
+    * [`Simple_People`](/#reference/0/people/all-people) - add `da_created`, `salary` fields if request has `withHistory`
+    * [`Simple_Clients`](/#reference/0/clients/all-people) - add `da_created` field if request has `withHistory`
+    * [`Simple_Projects_Ce`](/#reference/0/projects-v1/projects-people) - add `revenue_loss`, `revenue_gain` fields if request has `withLossGain`
+* [**`Simple_Timesheet_Month`**](/#reference/0/tracking/monthly-timesheet) - timesheet aggregated by month, project and person
+* **Overheads API**
+    * Upsert/delete non-project costs via [`/v2/overheads`](#reference/0/overheads)
+    * One-time cost and revenue in [Simple_Overheads](#reference/0/overhead-costs)
 
 ### Data Structures
 
@@ -316,7 +328,26 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 
 #### clOverheadType (enum[string])
 + `recurring_costs`
++ `onetime_cost`
++ `onetime_revenue`
 + `person_bonus`
+
+#### clOverhead (object)
++ id (number, required)
++ name (string, required)
++ amount (number, required)
++ da_start (clDate) - required for recurring costs
++ da_end (clDate)
++ da (clDate) - required for one-time cost/revenue and person bonus
++ person_id (number) - required for person bonus
++ type (clOverheadType)
+
+#### clOverheadAction (enum[string])
++ upsert - default action, if `action` is not specified; create/update depends on `id`
++ delete - delete an overhead. You can't undo this!
+
+#### clOverheadEdit (clOverhead)
++ action (clOverheadAction, optional)
 
 #### clTimeentryEdit (clTimeentry)
 + action (clTimeentryAction, optional)
@@ -1163,7 +1194,7 @@ _A new recurring project can't be created in API. But you can edit an existing r
 
 ### Get projects [GET /v2/projects/{?page,state,project_type,types}]
 
-Alternative display of [projects list from v1](http://docs.costlocker.apiary.io/#reference/0/projects/).
+Alternative display of [projects list from v1](/#reference/0/projects-v1/projects-list).
 If you unset `id` you can use it as template for creating a new project.
 
 Use `types` query parameter for loading
@@ -1263,9 +1294,9 @@ if you'd like to load project details for more projects.
 ### Get project detail [GET /v2/projects/{id}{?types}]
 
 Returns same project information like in projects list.
-In addition, it returns flat [people costs](http://docs.costlocker.apiary.io/#reference/0/projects-people-costs/),
-[billing](http://docs.costlocker.apiary.io/#reference/0/projects-billing),
-[expenses](http://docs.costlocker.apiary.io/#reference/0/projects-expenses),
+In addition, it returns flat [people costs](/#reference/0/projects-v1/projects-people),
+[billing](/#reference/0/projects-v1/projects-billing),
+[expenses](/#reference/0/projects-v1/projects-expenses),
 and discount.
 
 You can ignore `is_aggregation` object during creating/updating people costs in project.
@@ -1586,13 +1617,14 @@ entries from other persons._
 
         + meta (clMetaUpsert, required)
             + `finished_projects`: 0 (number, optional) - number of finished projects (included only if `meta.finished_projects` used in request)
-        + data (array[object], required)
-            + uuid (clUuid, required) - uuid of created/updated time-entry
-            + assignment (clTimeentryAssignment, required)
-            + action (enum, required)
-                + create
-                + update
-                + nothing - update that caused to no change
+        + data (array, required)
+            + (object)
+                + uuid (clUuid, required) - uuid of created/updated time-entry
+                + assignment (clTimeentryAssignment, required)
+                + action (enum[string], required)
+                    + create
+                    + update
+                    + nothing - update that caused to no change
 
     + Body
 
@@ -1727,6 +1759,117 @@ entries from other persons._
                         "status": 409,
                         "title": "Invalid time-entries",
                         "detail": "Person cannot track more than one entry at time"
+                    }
+                ]
+            }
+
+## Overheads [/v2/overheads]
+
+_**Scopes:** Only ADMIN and OWNER can edit overhead costs and person bonuses (non-project costs and revenue)._
+
+### Edit overhead costs and person bonuses [POST /v2/overheads]
+
++ Request (application/json)
+     
+    + Headers
+
+            Authorization: _check_authentication_section_
+
+    + Attributes
+        + data (array[clOverheadEdit], required)
+
+    + Body
+
+            {
+                "data": [
+                    {
+                        "id": null,
+                        "name": "Internet",
+                        "amount": 20,
+                        "da_start": "2016-01-01",
+                        "da_end": "2016-12-31",
+                        "da": null,
+                        "person_id": null,
+                        "type": "recurring_costs"
+                    },
+                    {
+                        "action": "upsert",
+                        "id": "2",
+                        "name": "Cell phones",
+                        "amount": 100,
+                        "da_start": "2016-11-01",
+                        "da_end": null,
+                        "da": null,
+                        "person_id": null,
+                        "type": "recurring_costs"
+                    },
+                    {
+                        "action": "upsert",
+                        "id": "4",
+                        "name": "Loan",
+                        "amount": 10000,
+                        "da_start": null,
+                        "da_end": null,
+                        "da": "2019-07-01",
+                        "person_id": null,
+                        "type": "onetime_cost"
+                    },
+                    {
+                        "action": "upsert",
+                        "id": "5",
+                        "name": "Tax rebate",
+                        "amount": 5000,
+                        "da_start": null,
+                        "da_end": null,
+                        "da": "2019-07-20",
+                        "person_id": null,
+                        "type": "onetime_revenue"
+                    },
+                    {
+                        "action": "delete",
+                        "id": "3"
+                    }
+                ]
+            }
+
+
++ Response 200 (application/json)
+
+    + Attributes
+
+        + meta (clMetaUpsert, required)
+        + data (array, required)
+            + (object)
+                + action (clOverheadAction, required)
+                + id (number, required)
+
+    + Body
+
+            {
+                "meta": {
+                    "created": 1,
+                    "updated": 4
+                },
+                "data": [
+                    {
+                        "action": "upsert",
+                        "id": 100
+                    },
+                    {
+                        "action": "upsert",
+                        "id": 2
+                    },
+                    {
+                        "action": "upsert",
+                        "id": 4
+                    },
+                    {
+                        "action": "upsert",
+                        "id": 5
+                    },
+                    {
+                        "action": "delete",
+                        "id": 3
                     }
                 ]
             }
@@ -2013,7 +2156,7 @@ They cannot see all projects and timesheets, salaries, rates, revenues, billing 
 
 + Request (application/json)
      
-      + Headers
+    + Headers
 
             Authorization: _check_authentication_section_
     
@@ -2049,11 +2192,14 @@ They cannot see all projects and timesheets, salaries, rates, revenues, billing 
 
 ## People [/v1/?Simple_People]
 
-### List of active and inactive people [POST /v1/]
+### All people [POST /v1/]
 
 + Request (application/json)
-     
-      + Headers
+
+    + Attributes
+        + withHistory: false (boolean, optional) - if `true` then `da_created` attribute and salary history `salary` is returned for each entry
+
+    + Headers
 
             Authorization: _check_authentication_section_
     
@@ -2063,7 +2209,23 @@ They cannot see all projects and timesheets, salaries, rates, revenues, billing 
                 "Simple_People": {}
             }
 
++ Request (application/json)
+     
+    + Headers
+
+            Authorization: _check_authentication_section_
+    
+    + Body
+
+            {
+                "Simple_People": {
+                    "withHistory": true
+                }
+            }
+
 + Response 200 (application/json)
+
+    Default response for `{"Simple_People": {}}`
 
     + Attributes
         + array[object]
@@ -2080,7 +2242,6 @@ They cannot see all projects and timesheets, salaries, rates, revenues, billing 
             + hourly_rate (number, optional) - when `type=hourly`
 
     + Body
-
 
             {
                 "Simple_People": [
@@ -2106,13 +2267,70 @@ They cannot see all projects and timesheets, salaries, rates, revenues, billing 
                 ]
             }
 
++ Response 200 (application/json)
+
+    Response for request `{"Simple_People": {"withHistory": true} }`
+
+    + Attributes
+        + array[object]
+            + salary (array, optional)
+            + da_created (clDate, optional)
+
+    + Body
+
+            {
+                "Simple_People": [
+                    {
+                        "id": "1",
+                        "first_name": "John",
+                        "last_name": "Doe",
+                        "mail": "john.doe@example.com",
+                        "deactivated": false,
+                        "type": "salary",
+                        "salary_hours": 160,
+                        "salary_amount": 30000,
+                        "salary": [
+                            {
+                                "type": "salary",
+                                "da_start": "2017-01-23",
+                                "da_end": null,
+                                "salary_hours": 160,
+                                "salary_amount": 30000,
+                                "hourly_rate": 187.5
+                            }
+                        ],
+                        "da_created": "2018-04-18"
+                    },
+                    {
+                        "id": "2",
+                        "first_name": "James",
+                        "last_name": "Bond",
+                        "mail": "james.bond@example.com",
+                        "deactivated": false,
+                        "type": "hourly",
+                        "hourly_rate": 500,
+                        "salary": [
+                            {
+                                "type": "hourly",
+                                "da_start": "2018-08-01",
+                                "da_end": null,
+                                "salary_hours": null,
+                                "salary_amount": null,
+                                "hourly_rate": 500
+                            }
+                        ],
+                        "da_created": "2018-12-18"
+                    }
+                ]
+            }
+
 ## Activities [/v1/?Simple_Activities]
 
-### List of active and inactive activities [POST /v1/]
+### All activities [POST /v1/]
 
 + Request (application/json)
      
-      + Headers
+    + Headers
 
             Authorization: _check_authentication_section_
     
@@ -2136,11 +2354,11 @@ They cannot see all projects and timesheets, salaries, rates, revenues, billing 
 
 ## Groups [/v1/?Simple_Groups]
 
-### List of groups with assigned people and activities [POST /v1/]
+### Assigned people and activities [POST /v1/]
 
 + Request (application/json)
      
-      + Headers
+    + Headers
 
             Authorization: _check_authentication_section_
     
@@ -2165,11 +2383,14 @@ They cannot see all projects and timesheets, salaries, rates, revenues, billing 
 
 ## Clients [/v1/?Simple_Clients]
 
-### List of active and inactive clients [POST /v1/]
+### All clients [POST /v1/]
 
 + Request (application/json)
-     
-      + Headers
+
+    + Attributes
+        + withHistory: false (boolean, optional) - if `true` then `da_created` attribute is returned for each entry
+
+    + Headers
 
             Authorization: _check_authentication_section_
     
@@ -2179,30 +2400,64 @@ They cannot see all projects and timesheets, salaries, rates, revenues, billing 
                 "Simple_Clients": {}
             }
 
++ Request (application/json)
+     
+    + Headers
+
+            Authorization: _check_authentication_section_
+    
+    + Body
+
+            {
+                "Simple_Clients": {
+                    "withHistory": true
+                }
+            }
+
 + Response 200 (application/json)
 
-        {
-            "Simple_Clients": [
-                { 
-                    "id": "1", 
-                    "name": "Google",
-                    "deactivated": false
-                }
-            ]
-        }
+    Default response for `{"Simple_Clients": {}}`
 
-## Projects [/v1/?Simple_Projects]
+    + Body
+
+            {
+                "Simple_Clients": [
+                    { 
+                        "id": "1", 
+                        "name": "Google",
+                        "deactivated": false
+                    }
+                ]
+            }
+
++ Response 200 (application/json)
+
+    Response for request `{"Simple_Clients": {"withHistory": true} }`
+
+    + Body
+
+            {
+                "Simple_Clients": [
+                    { 
+                        "id": "1", 
+                        "name": "Google",
+                        "deactivated": false,
+                        "da_created": "2018-04-18"
+                    }
+                ]
+            }
+
+## Projects v1 [/v1/?Simple_Projects]
 
 Response contains `profit`, `revenue`, `costs`, ..., if [the authenticated user](/#reference/0/authentication) is `ADMIN` or `OWNER`.
 
-Projects are ordered by `id DESC`.
-
-### Filtered projects [POST /v1/]
+### Projects list [POST /v1/]
 
 + Request (application/json)
 
     + Attributes
         + project (array[number], optional) - list of project ids
+        + client (array[number], optional) - list of client ids
         + state (clProjectState, optional)
         + project_type (clProjectType, optional)
             + `` - by default only standard projects are returned
@@ -2216,8 +2471,23 @@ Projects are ordered by `id DESC`.
     + Body
 
             {
+                "Simple_Projects": {}
+            }
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: _check_authentication_section_
+    
+    + Body
+
+            {
                 "Simple_Projects": {
                     "project": [1, 2],
+                    "client": [1, 2],
+                    "state": "running",
+                    "project_type": "standard",
                     "limit": 20,
                     "offset": 0
                 }
@@ -2227,9 +2497,7 @@ Projects are ordered by `id DESC`.
 
     + Attributes
         + array[object]
-            + state (enum)
-                + running
-                + finished
+            + state (clProjectState)
 
     + Body
 
@@ -2246,12 +2514,15 @@ Projects are ordered by `id DESC`.
                            "settings": null
                         },
                         "jobid": 1400001,
+                        "autojobid": false,
                         "da_start": "2014-10-24",
                         "da_end": "2014-12-24",
-                        "da_created": "2014-12-24",
-                        "da_close": null,
                         "revenue": 680400.00,
+                        "disc": 0,
                         "billed": 85000.00,
+                        "costs": 180400,
+                        "profit": 500000,
+                        "profit_margin": 0.73,
                         "hours_budgeted": 480,
                         "hours_tracked": 250,
                         "hours_billable": 480,
@@ -2282,9 +2553,12 @@ Projects are ordered by `id DESC`.
                 ]
             }
 
-### List of all ongoing and closed projects [POST /v1/]
+### Projects billing [POST /v1/]
 
 + Request (application/json)
+
+    + Attributes
+        + project (array[number], optional) - list of project ids
 
     + Headers
 
@@ -2293,75 +2567,10 @@ Projects are ordered by `id DESC`.
     + Body
 
             {
-                "Simple_Projects": {
-                }
+                "Simple_Projects_Billing": {}
             }
-
-+ Response 200 (application/json)
-
-    + Attributes
-        + array[object]
-            + state (enum)
-                + running
-                + finished
-
-    + Body
-
-            {
-                "Simple_Projects": [
-                    {
-                        "id": "1",
-                        "name": "GMail Redesign",
-                        "client_id": "1",
-                        "state": "running",
-                        "project_type": "standard",
-                        "recurring": {
-                           "id": null,
-                           "settings": null
-                        },
-                        "jobid": 1400001,
-                        "da_start": "2014-10-24",
-                        "da_end": "2014-12-24",
-                        "da_created": "2014-12-24",
-                        "da_close": null,
-                        "revenue": 680400.00,
-                        "billed": 85000.00,
-                        "hours_budgeted": 480,
-                        "hours_tracked": 250,
-                        "hours_billable": 480,
-                        "budget": {
-                            "type": "time_estimates.person_activity",
-                            "total_amount": 680400.00
-                        },
-                        "responsible_people": [
-                            {
-                                "id": "1"
-                            }, 
-                            {
-                                "id": "2"
-                            }
-                        ],
-                        "tags": [
-                            {
-                                "id": "1"
-                            },
-                            {
-                                "id": "2"
-                            }
-                        ]
-                    }
-                ]
-            }
-
-
-## Projects - Billing [/v1/?Simple_Projects_Billing]
-
-### Filtered billing [POST /v1/]
 
 + Request (application/json)
-
-    + Attributes
-        + project (array[number], optional) - list of project ids
 
     + Headers
 
@@ -2379,7 +2588,6 @@ Projects are ordered by `id DESC`.
 
     + Body
 
-
             {
                 "Simple_Projects_Billing": [
                     {
@@ -2393,41 +2601,7 @@ Projects are ordered by `id DESC`.
                 ]
             }
 
-### Billing items across ongoing and closed projects [POST /v1/]
-
-+ Request (application/json)
-
-    + Headers
-
-            Authorization: _check_authentication_section_
-    
-    + Body
-
-            {
-                "Simple_Projects_Billing": {}
-            }
-
-+ Response 200 (application/json)
-
-
-        {
-            "Simple_Projects_Billing": [
-                {
-                    "id": "1",
-                    "name": "Invoice201400001",
-                    "project_id": "1",
-                    "da": "2014-10-10",
-                    "amount": 15200,
-                    "issued": false
-                }
-            ]
-        }
-
-
-
-## Projects - People Costs [/v1/?Simple_Projects_Ce]
-
-### Filtered People Costs [POST /v1/]
+### Projects people [POST /v1/]
 
 + Request (application/json)
 
@@ -2436,7 +2610,20 @@ Projects are ordered by `id DESC`.
         + person (array[number], optional) - list of person ids
         + activity (array[number], optional) - list of activity ids
         + client (array[number], optional) - list of client ids
+        + withLossGain (boolean, optional) - is `revenue_loss` and `revenue_gain` returned?
 
+    + Headers
+
+            Authorization: _check_authentication_section_
+    
+    + Body
+
+            {
+                "Simple_Projects_Ce": {}
+            }
+
++ Request (application/json)
+     
     + Headers
 
             Authorization: _check_authentication_section_
@@ -2447,7 +2634,9 @@ Projects are ordered by `id DESC`.
                 "Simple_Projects_Ce": {
                     "project": [1, 2],
                     "person": [1],
-                    "activity": []
+                    "activity": [],
+                    "client": [],
+                    "withLossGain": true
                 }
             }
 
@@ -2473,8 +2662,12 @@ Projects are ordered by `id DESC`.
                             "total_amount": 30000,
                             "total_hours": 50,
                             "total_hours_billable": 50,
-                            "client_rate": 1500.00
+                            "client_rate": 1500.00,
+                            "revenue_loss": -1000,
+                            "revenue_gain": 45000
                         },
+                        "revenue_loss": 0,
+                        "revenue_gain": 45000,
                         "client_rate": 1500.00,
                         "person_rate": 1000,
                         "person_overhead": 0,
@@ -2511,77 +2704,7 @@ Projects are ordered by `id DESC`.
                 ]
             }
 
-
-### People Costs across ongoing and closed projects. [POST /v1/]
-
-+ Request (application/json)
-     
-      + Headers
-
-            Authorization: _check_authentication_section_
-    
-    + Body
-
-            {
-                "Simple_Projects_Ce": {}
-            }
-
-+ Response 200 (application/json)
-
-        {
-            "Simple_Projects_Ce": [
-                {
-                    "project_id": "1",
-                    "activity_id": "1",
-                    "person_id": "1",
-                    "hrs_budget": 50,
-                    "hrs_tracked": 20,
-                    "hrs_billable": 50,
-                    "budget_activity": {
-                        "total_amount": 30000,
-                        "total_hours": 50,
-                        "total_hours_billable": 50,
-                        "client_rate": 1500.00
-                    },
-                    "client_rate": 1500.00,
-                    "person_rate": 1000,
-                    "person_overhead": 0,
-                    "tasks": [
-                        {
-                            "name": "Analysis",
-                            "hrs_budget": 20,
-                            "hrs_tracked": 10
-                        },
-                        {
-                            "name": "Redesign",
-                            "hrs_budget": 30,
-                            "hrs_tracked": 10
-                        }
-                    ]
-                },
-                {
-                    "project_id": "2",
-                    "activity_id": "1",
-                    "person_id": "1",
-                    "hrs_budget": 10,
-                    "hrs_tracked": 0,
-                    "hrs_billable": 10,
-                    "budget_activity": {
-                        "total_amount": 500,
-                        "total_hours": 10,
-                        "total_hours_billable": 10,
-                        "client_rate": 50
-                    },
-                    "client_rate": 50,
-                    "person_rate": 500,
-                    "person_overhead": 100
-                }
-            ]
-        }
-
-## Projects - Expenses [/v1/?Simple_Projects_Expenses]
-
-### Filtered expenses [POST /v1/]
+### Projects expenses [POST /v1/]
 
 + Request (application/json)
 
@@ -2595,41 +2718,21 @@ Projects are ordered by `id DESC`.
     + Body
 
             {
+                "Simple_Projects_Expenses": {}
+            }
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: _check_authentication_section_
+
+    + Body
+
+            {
                 "Simple_Projects_Expenses": {
                     "project": [1, 2]
                 }
-            }
-
-+ Response 200 (application/json)
-
-    + Body
-
-
-            {
-                "Simple_Projects_Expenses": [
-                    {
-                        "id": "1",
-                        "project_id": "1",
-                        "name": "Invision",
-                        "date": "2014-09-18",
-                        "buy": 3000,
-                        "sell": 3000
-                    }
-                ]
-            }
-
-### Project Expenses across running and finished projects [POST /v1/]
-
-+ Request (application/json)
-     
-      + Headers
-
-            Authorization: _check_authentication_section_
-    
-    + Body
-
-            {
-                "Simple_Projects_Expenses": {}
             }
 
 + Response 200 (application/json)
@@ -2648,9 +2751,9 @@ Projects are ordered by `id DESC`.
         }
 
 
-## Timesheet [/v1/?Simple_Timesheet]
+## Tracking [/v1/?Simple_Tracking]
 
-### Filtered entries [POST /v1/]
+### Timesheet [POST /v1/]
 
 + Request (application/json)
 
@@ -2679,6 +2782,18 @@ Projects are ordered by `id DESC`.
     + Body
 
             {
+                "Simple_Timesheet": {}
+            }
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: _check_authentication_section_
+
+    + Body
+
+            {
                 "Simple_Timesheet": {
                     "project": [1, 2],
                     "person": [1],
@@ -2699,65 +2814,100 @@ Projects are ordered by `id DESC`.
 
 + Response 200 (application/json)
 
-        {
-            "Simple_Timesheet": [
-                {
-                    "uuid":"cc886881-bb07-4b6f-8c7e-db3495eecfe9",
-                    "date": "2015-07-08T20:09:16+0000",
-                    "project": "1",
-                    "person": "1",
-                    "activity": "1",
-                    "client": "2",
-                    "task": "1",
-                    "interval": 1800,
-                    "billable": 1800,
-                    "description": "Explore current app",
-                    "task_name": "Analysis",
-                    "client_rate": 1500.00,
-                    "person_rate": 1000,
-                    "person_overhead": 0
-                },
-                {
-                    "uuid":"cc886881-bb07-4b6f-8c7e-db3495eecfe8",
-                    "date": "2015-02-09T20:09:16+0000",
-                    "project": "2",
-                    "person": "1",
-                    "activity": "3",
-                    "client": "2",
-                    "task": "2",
-                    "interval": 9823,
-                    "billable": 0,
-                    "description": "Spike solution in Invision",
-                    "task_name": "Redesign",
-                    "client_rate": 50,
-                    "person_rate": 500,
-                    "person_overhead": 100
-                },      
-                {
-                    "uuid":"cc886881-bb07-4b6f-8c7e-db3495eecfe7",
-                    "date":"2016-11-29T10:32:06+0000",
-                    "project":null,
-                    "person":"1",
-                    "activity":null,
-                    "client":null,
-                    "task":null,
-                    "interval":7194,
-                    "billable": 3600,
-                    "description":"Preparing new project",
-                    "task_name":null,
-                    "client_rate":null,
-                    "person_rate":null,
-                    "person_overhead":null
-                }
-            ]   
-        }
+    Default response for `{"Simple_Timesheet": {}}`
+    
+    + Body
 
-### All entries [POST /v1/]
+            {
+                "Simple_Timesheet": [
+                    {
+                        "date": "2015-07-08T20:09:16+0000",
+                        "project": "1",
+                        "person": "1",
+                        "activity": "1",
+                        "client": "2",
+                        "task": "1",
+                        "interval": 1800,
+                        "description": "Explore current app",
+                        "task_name": "Analysis"
+                    }
+                ] 
+            }
 
-* `withRates=false` - entries are without rates (client rate, person rate, person overhead)
-* `nonproject=false` - entries with assigned project, no-project entries are ignored
++ Response 200 (application/json)
+
+    Response for request `{"Simple_Timesheet": {"withRates": true, "withBillable": true, "withUuids": true} }`
+    
+    + Body
+
+            {
+                "Simple_Timesheet": [
+                    {
+                        "uuid":"cc886881-bb07-4b6f-8c7e-db3495eecfe9",
+                        "date": "2015-07-08T20:09:16+0000",
+                        "project": "1",
+                        "person": "1",
+                        "activity": "1",
+                        "client": "2",
+                        "task": "1",
+                        "interval": 1800,
+                        "billable": 1800,
+                        "description": "Explore current app",
+                        "task_name": "Analysis",
+                        "client_rate": 1500.00,
+                        "person_rate": 1000,
+                        "person_overhead": 0
+                    },
+                    {
+                        "uuid":"cc886881-bb07-4b6f-8c7e-db3495eecfe8",
+                        "date": "2015-02-09T20:09:16+0000",
+                        "project": "2",
+                        "person": "1",
+                        "activity": "3",
+                        "client": "2",
+                        "task": "2",
+                        "interval": 9823,
+                        "billable": 0,
+                        "description": "Spike solution in Invision",
+                        "task_name": "Redesign",
+                        "client_rate": 50,
+                        "person_rate": 500,
+                        "person_overhead": 100
+                    },      
+                    {
+                        "uuid":"cc886881-bb07-4b6f-8c7e-db3495eecfe7",
+                        "date":"2016-11-29T10:32:06+0000",
+                        "project":null,
+                        "person":"1",
+                        "activity":null,
+                        "client":null,
+                        "task":null,
+                        "interval":7194,
+                        "billable": 3600,
+                        "description":"Preparing new project",
+                        "task_name":null,
+                        "client_rate":null,
+                        "person_rate":null,
+                        "person_overhead":null
+                    }
+                ]   
+            }
+
+### Monthly Timesheet [POST /v1/]
+
+Aggregated project person monthly timesheet.
 
 + Request (application/json)
+
+    + Attributes
+        + project (array[number], optional) - array of projects id's to be limited
+        + person (array[number], optional) - array of people id's to be limited
+        + client (array[number], optional) - array of clients id's to be limited
+        + nonproject: false (boolean, optional) -  if no-project entries are included in response
+        + datef (clDate, optional) - only entries created after specific date (Y-m-d)
+        + datet (clDate, optional) - only entries created before specific date (Y-m-d)
+        + limit (number, optional) - pagination, by default all projects are returned
+        + offset: 0 (number, optional) - pagination
 
     + Headers
 
@@ -2766,94 +2916,53 @@ Projects are ordered by `id DESC`.
     + Body
 
             {
-                "Simple_Timesheet": {}
+                "Simple_Timesheet_Month": {}
             }
-
-+ Response 200 (application/json)
-
-
-        {
-            "Simple_Timesheet": [
-                {
-                    "date": "2015-07-08T20:09:16+0000",
-                    "project": "1",
-                    "person": "1",
-                    "activity": "1",
-                    "client": "2",
-                    "task": "1",
-                    "interval": 1800,
-                    "description": "Explore current app",
-                    "task_name": "Analysis"
-                },
-                {
-                    "date": "2015-02-09T20:09:16+0000",
-                    "project": "2",
-                    "person": "1",
-                    "activity": "3",
-                    "client": "2",
-                    "task": "2",
-                    "interval": 9823,
-                    "description": "Spike solution in Invision",
-                    "task_name": "Redesign"
-                }
-            ] 
-        }
-
-## Tracking [/v1/?Simple_Tracking]
-
-Format like in [`timeentries` webhook](/#reference/0/webhooks/get-webhook-example).
-`assignment` can be used for [creating/updating time-entries](/#reference/0/time-entries/create/update-time-entries).
-
-### Running entry [POST /v1/]
-
-Returns `null` if no entry is running.
 
 + Request (application/json)
 
     + Headers
 
             Authorization: _check_authentication_section_
-    
+
     + Body
 
             {
-                "Simple_Tracking_RunningEntry": {}
-            }
-
-+ Response 200 (application/json)
-
-        {
-            "Simple_Tracking_RunningEntry": {
-                "uuid": "139fce1b-c243-4890-b328-ec5d8394e073",
-                "date": "2017-06-09T09:53:06+0000",
-                "duration": null,
-                "description": "Init project",
-                "assignment": {
-                    "person_id": 1,
-                    "project_id": 1,
-                    "activity_id": 1,
-                    "task_id": 1
-                },
-                "names": {
-                    "person_fullname": "John Doe",
-                    "project_name": "Website",
-                    "client_name": "ACME",
-                    "activity_name": "Design",
-                    "task_name": "Homepage"
+                "Simple_Timesheet_Month": {
+                    "project": [1, 2],
+                    "person": [1],
+                    "client": [],
+                    "nonproject": true,
+                    "datef": "2016-11-01",
+                    "datet": "2016-11-30",
+                    "limit": 5,
+                    "offset": 0
                 }
             }
-        }
 
 + Response 200 (application/json)
 
+    + Body
 
-        {
-            "Simple_Tracking_RunningEntry": null
-        }
+            {
+                "Simple_Timesheet_Month": [
+                    {
+                        "da_month": "2015-07-01",
+                        "project": "1",
+                        "person": "1",
+                        "activity": "1",
+                        "interval": 1800,
+                        "billable": 1000
+                    }
+                ] 
+            }
 
 ### Available assignments [POST /v1/]
 
 Unlocked assignments from currently running projects.
+
+Formatted like in [`timeentries` webhook](/#reference/0/webhooks/get-webhook-example).
+Use `assignment` for [creating/updating time-entries](/#reference/0/time-entries/create/update-time-entries).
 
 + Request (application/json)
 
@@ -2904,13 +3013,59 @@ Unlocked assignments from currently running projects.
             ]
         }
 
+### Running entry [POST /v1/]
+
+Returns `null` if no entry is running.
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: _check_authentication_section_
+    
+    + Body
+
+            {
+                "Simple_Tracking_RunningEntry": {}
+            }
+
++ Response 200 (application/json)
+
+        {
+            "Simple_Tracking_RunningEntry": {
+                "uuid": "139fce1b-c243-4890-b328-ec5d8394e073",
+                "date": "2017-06-09T09:53:06+0000",
+                "duration": null,
+                "description": "Init project",
+                "assignment": {
+                    "person_id": 1,
+                    "project_id": 1,
+                    "activity_id": 1,
+                    "task_id": 1
+                },
+                "names": {
+                    "person_fullname": "John Doe",
+                    "project_name": "Website",
+                    "client_name": "ACME",
+                    "activity_name": "Design",
+                    "task_name": "Homepage"
+                }
+            }
+        }
+
++ Response 200 (application/json)
+
+        {
+            "Simple_Tracking_RunningEntry": null
+        }
+
 ## Tags [/v1/?Simple_Tags]
 
-### List of all tags [POST /v1/]
+### Available project tags [POST /v1/]
 
 + Request (application/json)
      
-      + Headers
+    + Headers
 
             Authorization: _check_authentication_section_
     
@@ -2939,7 +3094,7 @@ Unlocked assignments from currently running projects.
 
 _**Scopes:** Only ADMIN and OWNER can read overhead costs._
 
-### List of all overhead costs [POST /v1/]
+### Overhead costs and person bonuses [POST /v1/]
 
 + Request (application/json)
      
@@ -2948,7 +3103,7 @@ _**Scopes:** Only ADMIN and OWNER can read overhead costs._
             Authorization: _check_authentication_section_
 
     + Attributes
-        + type (array[clOverheadType], optional)
+        + type (array[clOverheadType], optional) - recurring_costs are returned if no type is specified 
 
     + Body
 
@@ -2961,48 +3116,61 @@ _**Scopes:** Only ADMIN and OWNER can read overhead costs._
 + Response 200 (application/json)
 
     + Attributes
-        + array[object]
-            + id (number, required)
-            + name (string, required)
-            + amount (number, required)
-            + da_start (clDate) - required for recurring costs
-            + da_end (clDate)
-            + da (clDate) - required for person bonus
-            + person_id (number) - required for person bonus
+        + Simple_Overheads (array[clOverhead])
 
     + Body
 
-        {
-            "Simple_Overheads": [
-                {
-                    "id": "1",
-                    "name": "Internet",
-                    "amount": 20,
-                    "da_start": "2016-01-01",
-                    "da_end": "2016-12-31",
-                    "da": null,
-                    "person_id": null,
-                    "type": "recurring_costs"
-                },
-                {
-                    "id": "2",
-                    "name": "Cell phones",
-                    "amount": 100,
-                    "da_start": "2016-11-01",
-                    "da_end": null,
-                    "da": null,
-                    "person_id": null,
-                    "type": "recurring_costs"
-                },
-                {
-                    "id": "3",
-                    "name": "Christmas 2018",
-                    "amount": 50,
-                    "da_start": null,
-                    "da_end": null,
-                    "da": "2018-12-24",
-                    "person_id": 1,
-                    "type": "person_bonus"
-                }
-            ]
-        }
+            {
+                "Simple_Overheads": [
+                    {
+                        "id": "1",
+                        "name": "Internet",
+                        "amount": 20,
+                        "da_start": "2016-01-01",
+                        "da_end": "2016-12-31",
+                        "da": null,
+                        "person_id": null,
+                        "type": "recurring_costs"
+                    },
+                    {
+                        "id": "2",
+                        "name": "Cell phones",
+                        "amount": 100,
+                        "da_start": "2016-11-01",
+                        "da_end": null,
+                        "da": null,
+                        "person_id": null,
+                        "type": "recurring_costs"
+                    },
+                    {
+                        "id": "4",
+                        "name": "Loan",
+                        "amount": 10000,
+                        "da_start": null,
+                        "da_end": null,
+                        "da": "2019-07-01",
+                        "person_id": null,
+                        "type": "onetime_cost"
+                    },
+                    {
+                        "id": "5",
+                        "name": "Tax rebate",
+                        "amount": 5000,
+                        "da_start": null,
+                        "da_end": null,
+                        "da": "2019-07-20",
+                        "person_id": null,
+                        "type": "onetime_revenue"
+                    },
+                    {
+                        "id": "3",
+                        "name": "Christmas 2018",
+                        "amount": 50,
+                        "da_start": null,
+                        "da_end": null,
+                        "da": "2018-12-24",
+                        "person_id": 1,
+                        "type": "person_bonus"
+                    }
+                ]
+            }
