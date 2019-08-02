@@ -160,6 +160,12 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
     * Upsert/delete non-project costs via [`/v2/overheads`](#reference/0/overheads)
     * One-time cost and revenue in [Simple_Overheads](#reference/0/overhead-costs)
 
+#### _August 2019_
+
+* **[Multi-currency](https://costlocker.github.io/blog/2017-05-14-import-projects-to-costlocker.html#multi-currency)**
+    * Add project and json `currency` to [Projects API](#reference/0/projects)
+    * Hypermedia links depend on json currency _(if `?currency=project` is used)_
+
 ### Data Structures
 
 #### clUuid (string, optional) - `87d2a4e5-5a2e-413d-ab4b-5b3771cc03c1`
@@ -167,6 +173,8 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 #### clDate (string) - `2016-12-24`
 
 #### clDatetime (string) - `2016-12-24 20:00:50`
+
+#### currencyISO4217 (string) - `USD`
 
 #### clLiberalDate (enum)
 + clDate: `2016-12-24` (string) - date
@@ -186,6 +194,9 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 + name (string, required)
 + state (clProjectState, optional)
 + project_type (clProjectType, optional)
++ currency (object, optional) - 
+    + project (currencyISO4217, required) - project currency
+    + json (currencyISO4217, required) - amounts currency used in API request/response
 + recurring (object, optional) - 
     + id (string) - id of parent recurring project
     + settings (object, optional) - for recurring project
@@ -930,6 +941,10 @@ _A new recurring project can't be created in API. But you can edit an existing r
                             "is_generated": true,
                             "id": null
                         },
+                        "currency" : {
+                           "json" : "USD",
+                           "project" : "USD"
+                        },
                         "responsible_people": [
                             "existing@example.com",
                             {
@@ -1254,6 +1269,10 @@ if you'd like to load project details for more projects.
                             "date_end": "2017-05-20"
                         },
                         "project_type": "standard",
+                        "currency" : {
+                           "json" : "USD",
+                           "project" : "USD"
+                        },
                         "recurring": {
                            "id": null,
                            "settings": null
@@ -1339,6 +1358,10 @@ Such objects are always upserted if they don't exist or their existing hours bud
                         "date_end": "2017-05-20"
                     },
                     "project_type": "standard",
+                    "currency" : {
+                       "json" : "USD",
+                       "project" : "USD"
+                    },
                     "recurring": {
                        "id": null,
                        "settings": null

@@ -27,6 +27,7 @@ _Updates_
 * _**{{ '2018-09-11' | date: '%B %Y' }}**: we've added [no-budget](#no-budget-no_budget)_
 * _**{{ '2019-01-09' | date: '%B %Y' }}**: we've added [person client rate](#budget)_
 * _**{{ '2019-04-26' | date: '%B %Y' }}**: we've added [recurring projects](#recurring-projects), [progress and billable exceeded estimates](#budget)_
+* _**{{ '2019-08-05' | date: '%B %Y' }}**: we've added [multi-currency](#multi-currency)_
 
 ## Project API introduction
 
@@ -51,6 +52,10 @@ More advanced concepts (personnel costs, billing, &hellip;) are defined in [`ite
    },
    "state": "running",
    "project_type": "standard",
+   "currency": {
+      "project": "EUR",
+      "json": "USD"
+   },
    "recurring": {
       "id": null,
       "settings": null
@@ -493,6 +498,90 @@ add it to activity item if `time_estimates.activity`.
     }
 }
 ```
+
+---
+
+## Multi-currency
+
+Project has one currency defined in `currency.project`.
+The second `currency.json` avoids BC in API, since we had supported only one currency per company.
+
+```json
+{
+   "currency": {
+      "project": "EUR",
+      "json": "USD"
+   }
+}
+```
+
+### Example
+
+* main company currency is USD, but some projects are managed in EUR
+* we've added [an exchange rate](https://new.costlocker.com/settings/company) `1USD = 0.9EUR`
+* project revenue is 900EUR (~1000USD)
+
+#### Company currency
+
+By default all responses have amounts in company currency, in our case it's USD.
+
+```json
+{
+   "currency": {
+      "project": "EUR",
+      "json": "USD"
+   },
+    "items": [
+        {
+            "item": {
+                "type": "project"
+            },
+            "budget": {
+                "total_amount": 1000
+            }
+        }
+    ],
+    "links": {
+       "project": "https://new.costlocker.com/api-public/v2/projects/123",
+       "peoplecosts": "https://new.costlocker.com/api-public/v2/projects/123?types=peoplecosts",
+       "change_currency": "https://new.costlocker.com/api-public/v2/projects/123?currency=project"
+    }
+}
+```
+
+#### Project currency - `?currency=project`
+
+Amounts are returned in project currency when query string `?currency=project` is used.
+
+```json
+{
+   "currency": {
+      "project": "EUR",
+      "json": "EUR"
+   },
+    "items": [
+        {
+            "item": {
+                "type": "project"
+            },
+            "budget": {
+                "total_amount": 900
+            }
+        }
+    ],
+    "links": {
+       "project": "https://new.costlocker.com/api-public/v2/projects/123?currency=project",
+       "peoplecosts": "https://new.costlocker.com/api-public/v2/projects/123?currency=project&types=peoplecosts",
+       "change_currency": "https://new.costlocker.com/api-public/v2/projects/123"
+    }
+}
+```
+
+### Updating projects
+
+Same rules are applied for creating/updating projects.
+We determine project currency from `currency.project` and amounts currency from `currency.json`.
+Query string `?currency=project` is ignored!
 
 ---
 
