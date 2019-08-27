@@ -152,7 +152,7 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 
 * Filter [`Simple_Projects`](/#reference/0/projects-v1/projects-list) by **`client`**
 * **New attributes in Simple API**
-    * [`Simple_People`](/#reference/0/people/all-people) - add `da_created`, `salary` fields if request has `withHistory`
+    * [`Simple_People`](/#reference/0/people-v1/all-people) - add `da_created`, `salary` fields if request has `withHistory`
     * [`Simple_Clients`](/#reference/0/clients/all-people) - add `da_created` field if request has `withHistory`
     * [`Simple_Projects_Ce`](/#reference/0/projects-v1/projects-people) - add `revenue_loss`, `revenue_gain` fields if request has `withLossGain`
 * [**`Simple_Timesheet_Month`**](/#reference/0/tracking/monthly-timesheet) - timesheet aggregated by month, project and person
@@ -169,6 +169,11 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
     * stopped project has `finished state`
     * change state with `reopen` or `finish` action
 * Add new [**project webhooks**](/#reference/0/webhooks/get-webhook-example) - `projects.finish`, `projects.reopen`, `projects.delete`
+
+#### _September 2019_
+
+* **People API**
+    * Create/update people via [`/v2/people`](#reference/0/people)
 
 ### Data Structures
 
@@ -189,9 +194,9 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 
 #### clProjectAction (enum[string])
 + upsert - default action, if `action` is not specified
-+ delete - delete an project. You can't undo this!
-+ finish - finish an running project
-+ reopen - reopen an finished project
++ delete - delete a project. You can't undo this!
++ finish - finish a running project
++ reopen - reopen a finished project
 
 #### clProject (object)
 + id (number, optional)
@@ -238,6 +243,14 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
     + progress_type (clBudgetTypeProgress, optional) - enables estimated hours for tracking progress in budgets without estimates
     + bill_exceeded_estimates (boolean, optional) - can increase revenue for budgets with time-estimates
 + items (array[clProjectItem], optional)
+
+#### clPersonEdit (clPerson)
++ action (clPersonAction, optional)
+
+#### clPersonAction (enum[string])
++ upsert - default action, if `action` is not specified
++ deactivate - deactivate a person
++ reactivate - reactivate a person
 
 #### clPerson (object)
 + email (string, required)
@@ -1793,6 +1806,210 @@ entries from other persons._
                 ]
             }
 
+## People [/v2/people]
+
+_**Scopes:** Only ADMIN and OWNER can edit people. ._
+
+### Create/update people [POST /v2/people]
+
+    Person can be created with initial salary. But it's not possible to update a salary.
+
++ Request (application/json)
+     
+    + Headers
+
+            Authorization: _check_authentication_section_
+
+    + Attributes
+        + meta
+            + send_invitation (boolean, optional) - is invitation sent to new people?
+        + data (array[clPersonEdit], required)
+
+    + Body
+
+            {
+                "data": [
+                    {
+                        "email": "admin@example.com",
+                        "first_name": "New",
+                        "last_name": "Admin",
+                        "role": "ADMIN",
+                        "salary": {
+                            "payment": "monthly",
+                            "salary": 10000,
+                            "hours": 160,
+                            "date_start": "2017-02-01"
+                        }
+                    },
+                    {
+                        "email": "manager@example.com",
+                        "first_name": "New",
+                        "last_name": "Manager",
+                        "role": "MANAGER",
+                        "salary": {
+                            "payment": "hourly",
+                            "hourly_rate": 200
+                        }
+                    },
+                    {
+                        "email": "employee@example.com",
+                        "first_name": "Default employee",
+                        "last_name": "Without salary"
+                    },
+                    {
+                        "email": "existing@example.com",
+                        "first_name": "change first name"
+                    },
+                    {
+                        "email": "change-role@example.com",
+                        "role": "ADMIN"
+                    },
+                    {
+                        "action": "upsert",
+                        "id": 1,
+                        "email": "change-email@example.com"
+                    },
+                    {
+                        "action": "deactivate",
+                        "email": "active-person@example.com"
+                    },
+                    {
+                        "action": "reactivate",
+                        "email": "inactive-person@example.com"
+                    }
+                ]
+            }
+
++ Response 200 (application/json)
+
+            {
+                "meta": {
+                    "created": 3,
+                    "updated": 5
+                },
+                "data": [
+                    {
+                        "action": "upsert",
+                        "id": 5
+                    },
+                    {
+                        "action": "upsert",
+                        "id": 6
+                    },
+                    {
+                        "action": "upsert",
+                        "id": 7
+                    },
+                    {
+                        "action": "upsert",
+                        "id": 8
+                    },
+                    {
+                        "action": "upsert",
+                        "id": 2
+                    },
+                    {
+                        "action": "upsert",
+                        "id": 1
+                    },
+                    {
+                        "action": "deactivate",
+                        "id": 3
+                    },
+                    {
+                        "action": "reactivate",
+                        "id": 4
+                    }
+                ]
+            }
+
++ Response 402 (application/vnd.api+json)
+
+    + Body
+
+            {
+                "errors": [
+                    {
+                        "status": 402,
+                        "title": "Invalid people",
+                        "detail": "People limit reached. Ask the Owner to increase the limit."
+                    }
+                ]
+            }
+
++ Response 400 (application/vnd.api+json)
+
+    + Body
+
+            {
+                "errors": [
+                    {
+                        "status": 400,
+                        "title": "Invalid JSON request",
+                        "source": {
+                            "pointer": "/0/id"
+                        },
+                        "detail": "Failed matching exactly one of the provided schemas."
+                    },
+                    {
+                        "status": 400,
+                        "title": "Invalid JSON request",
+                        "source": {
+                            "pointer": "/0/email"
+                        },
+                        "detail": "Value \"invalid_email\" does not match the format \"email\""
+                    },
+                    {
+                        "status": 400,
+                        "title": "Invalid JSON request",
+                        "source": {
+                            "pointer": "/0/role"
+                        },
+                        "detail": "Value \"UNKNOWN\" is not one of: [\"ADMIN\",\"MANAGER\",\"EMPLOYEE\"]"
+                    },
+                    {
+                        "status": 400,
+                        "title": "Invalid JSON request",
+                        "source": {
+                            "pointer": "/0/salary/payment"
+                        },
+                        "detail": "Value \"unknown\" is not one of: [\"monthly\",\"hourly\"]"
+                    },
+                    {
+                        "status": 400,
+                        "title": "Invalid JSON request",
+                        "source": {
+                            "pointer": "/0/salary/hourly_rate"
+                        },
+                        "detail": "Number -200 is not at least 0"
+                    },
+                    {
+                        "status": 400,
+                        "title": "Invalid JSON request",
+                        "source": {
+                            "pointer": "/0/salary/salary"
+                        },
+                        "detail": "Number -10000 is not at least 0"
+                    },
+                    {
+                        "status": 400,
+                        "title": "Invalid JSON request",
+                        "source": {
+                            "pointer": "/0/salary/hours"
+                        },
+                        "detail": "Number -160 is not at least 0"
+                    },
+                    {
+                        "status": 400,
+                        "title": "Invalid JSON request",
+                        "source": {
+                            "pointer": "/0/salary/date_start"
+                        },
+                        "detail": "Invalid date format - use 'Y-m-d' or 'Y-m-d H:i:s', not 'today'"
+                    }
+                ]
+            }
+
 ## Overheads [/v2/overheads]
 
 _**Scopes:** Only ADMIN and OWNER can edit overhead costs and person bonuses (non-project costs and revenue)._
@@ -2220,7 +2437,7 @@ They cannot see all projects and timesheets, salaries, rates, revenues, billing 
                 "Simple_Timesheet": []
             }
 
-## People [/v1/?Simple_People]
+## People v1 [/v1/?Simple_People]
 
 ### All people [POST /v1/]
 
