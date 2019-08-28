@@ -261,13 +261,19 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
     + MANAGER
     + EMPLOYEE
 + salary (object, optional)
-    + payment (enum, required)
-        + monthly
-        + hourly
+    + payment (clSalaryTypeV2, required)
     + salary (number, optional) - for `monthly` salary
     + hours (number, optional) - for `monthly` salary
     + date_start (clLiberalDate, optional) - for `monthly` salary
     + hourly_rate (number, optional) - for `hourly` salary
+
+#### clSalaryTypeV2 (enum)
++ monthly - beware different naming in APIs: Rest API has salary's field `payment=monthly`, Simple API has person's field `type=salary`
++ hourly
+
+#### clPersonTypeV1 (enum)
++ salary - beware different naming in APIs: Rest API has salary's field `payment=monthly`, Simple API has person's field `type=salary`
++ hourly
 
 #### clProjectItem (object)
 + action (enum[string], optional)
@@ -2481,9 +2487,7 @@ They cannot see all projects and timesheets, salaries, rates, revenues, billing 
             + last_name (string, required)
             + mail (string, required)
             + deactivated (boolean, required)
-            + type (enum, required)
-                + salary
-                + hourly
+            + type (clPersonTypeV1, required)
             + salary_hours (number, optional) - when `type=salary`
             + salary_amount (number, optional) - when `type=salary`
             + hourly_rate (number, optional) - when `type=hourly`
