@@ -174,6 +174,9 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 
 * **People API**
     * Create/update people via [`/v2/people`](#reference/0/people)
+* [Legacy GET request](https://github.com/costlocker/costlocker.github.io/commit/9a5015d) in Simple API is no longer supported.
+  [Request must be sent in http body](/#reference/0/simple-api-v1/post-request).
+* [Simple_Projects_Ce](/#reference/0/projects-v1/projects-people) - add `task_id`
 
 ### Data Structures
 
@@ -2924,11 +2927,13 @@ Response contains `profit`, `revenue`, `costs`, ..., if [the authenticated user]
                         "person_overhead": 0,
                         "tasks": [
                             {
+                                "task_id": 1,
                                 "name": "Analysis",
                                 "hrs_budget": 20,
                                 "hrs_tracked": 10
                             },
                             {
+                                "task_id": 2,
                                 "name": "Redesign",
                                 "hrs_budget": 30,
                                 "hrs_tracked": 10
