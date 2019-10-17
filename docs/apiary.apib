@@ -178,6 +178,10 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
   [Request must be sent in http body](/#reference/0/simple-api-v1/post-request).
 * [Simple_Projects_Ce](/#reference/0/projects-v1/projects-people) - add `task_id`
 
+#### _October 2019_
+
+* [Create/edit time-entries](#reference/0/time-entries/create/update-time-entries), even if assignment not yet exists _(**experimental feature:** `meta.unknown_assigments: 'create'`)_
+
 ### Data Structures
 
 #### clUuid (string, optional) - `87d2a4e5-5a2e-413d-ab4b-5b3771cc03c1`
@@ -387,6 +391,7 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 + action (clOverheadAction, optional)
 
 #### clTimeentryEdit (clTimeentry)
++ assignment (clTimeentryAssignmentEdit, optional)
 + action (clTimeentryAction, optional)
 
 #### clTimeentryAction (enum[string])
@@ -409,6 +414,9 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 + project_id: 1 (number, required)
 + activity_id: 1 (number, required) 
 + task_id (number, optional)
+
+#### clTimeentryAssignmentEdit (clTimeentryAssignment)
++ task (string, optional) - task id or name (name is necessary for creating new assignments via `meta.unknown_assigments: 'create')
 
 #### clWebhookDelete (object)
 + uuid (clUuid, required)
@@ -753,6 +761,11 @@ Use your app name and personal token in Authorization header: `Authorization:Bas
 
 ### OAuth 2 - get access token [POST /oauth2/access_token]
 
+| Token | Expiration |
+| ----- | ---------- |
+| `access_token` | 7 days |
+| `refresh_token` | 30 days |
+
 + Request (application/x-www-form-urlencoded)
 
     + Attributes ()
@@ -935,6 +948,8 @@ Take look at example requests in Apiary or check
 [our blog about Projects API](https://costlocker.github.io/blog/2017-05-14-import-projects-to-costlocker.html)
 
 _A new recurring project can't be created in API. But you can edit an existing recurring project, just like a standard project._
+
+_We don't support creating activity or client without project!_
 
 + Request (application/vnd.api+json)
 
@@ -1604,6 +1619,20 @@ entries from other persons._
 
 ### Create/update time entries [POST /v2/timeentries/]
 
+We recommend to use bulk API: send multiple time entries in single request instead of parallel requests with one time-entry.
+
+Bulk API preserves order if save succeeded. First data item in response belongs to first time-entry, second response to second time-entry etc.
+Inspect [errors](/#reference/0/rest-api-v2/errors), if API failed. No time-entry is saved, if at least one time-entry can't be saved.
+
+Check `meta` fields if you are [updating projects](/#reference/0/projects/create/update-projects) before time sync.
+The endpoint supports reopening finished project, creating unknown assignments. But it's turned off by default.
+
+E.g. `meta.finished_projects: "reopen"` replaces three API requests:
+
+1. Reopen finished project
+1. Add time time entries
+1. Close finished project
+
 + Request (application/vnd.api+json)
 
     + Attributes
@@ -1611,6 +1640,9 @@ entries from other persons._
             + finished_projects (enum, optional)
                 + error - editing entries from finished projects causes an error
                 + reopen - finished project is automatically opened and closed
+            + unknown_assigments (enum, optional)
+                + error - non-existent assignment causes an error
+                + create - !!! EXPERIMENTAL FEATURE !!! empty assignment is created (no hourly rate, no estimated hours)
         + data (array[clTimeentryEdit], required)
 
     + Headers
@@ -1634,6 +1666,7 @@ entries from other persons._
                         }
                     },
                     {
+                        "uuid": "b0537a3d-ee6e-45d1-8734-2b4cdc00cfb3",
                         "date": "2017-03-28 09:46:00",
                         "duration": 3600,
                         "assignment": {
@@ -1669,6 +1702,7 @@ entries from other persons._
 
         + meta (clMetaUpsert, required)
             + `finished_projects`: 0 (number, optional) - number of finished projects (included only if `meta.finished_projects` used in request)
+            + `unknown_assignments`: 0 (number, optional) - number of created assignments (included only if `meta.unknown_assignments` used in request)
         + data (array, required)
             + (object)
                 + uuid (clUuid, required) - uuid of created/updated time-entry
@@ -1682,7 +1716,7 @@ entries from other persons._
 
             {
                 "meta": {
-                    "created": 1,
+                    "created": 3,
                     "updated": 2,
                     "finished_projects": 0
                 },
@@ -1695,7 +1729,7 @@ entries from other persons._
                             "activity_id": 1,
                             "task_id": 1
                         },
-                        "action": "create"
+                        "action": "nothing"
                     },
                     {
                         "uuid": "b0537a3d-ee6e-45d1-8734-2b4cdc00cfb3",
@@ -1715,7 +1749,17 @@ entries from other persons._
                             "activity_id": 1,
                             "task_id": null
                         },
-                        "action": "nothing"
+                        "action": "create"
+                    },
+                    {
+                        "uuid": "f5128c0d-e68b-44a7-9273-de26fb7f49a3",
+                        "assignment": {
+                            "person_id": 1,
+                            "activity_id": null,
+                            "person_id": null,
+                            "task_id": null
+                        },
+                        "action": "create"
                     },
                     {
                         "uuid": "d85d843e-c2ed-479e-9159-dda5e14177ab",
