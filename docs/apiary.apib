@@ -182,6 +182,10 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 
 * [Create/edit time-entries](#reference/0/time-entries/create/update-time-entries), even if assignment not yet exists _(**experimental feature:** `meta.unknown_assigments: 'create'`)_
 
+#### _November 2019_
+
+* [**Simple_Clients**](/#reference/0/clients) - add `withRates` parameter
+
 ### Data Structures
 
 #### clUuid (string, optional) - `87d2a4e5-5a2e-413d-ab4b-5b3771cc03c1`
@@ -2687,6 +2691,7 @@ They cannot see all projects and timesheets, salaries, rates, revenues, billing 
 
     + Attributes
         + withHistory: false (boolean, optional) - if `true` then `da_created` attribute is returned for each entry
+        + withRates: false (boolean, optional)
 
     + Headers
 
@@ -2730,7 +2735,7 @@ They cannot see all projects and timesheets, salaries, rates, revenues, billing 
 
 + Response 200 (application/json)
 
-    Response for request `{"Simple_Clients": {"withHistory": true} }`
+    Response for request `{"Simple_Clients": {"withHistory": true, "withRates": true} }`
 
     + Body
 
@@ -2740,7 +2745,13 @@ They cannot see all projects and timesheets, salaries, rates, revenues, billing 
                         "id": "1", 
                         "name": "Google",
                         "deactivated": false,
-                        "da_created": "2018-04-18"
+                        "da_created": "2018-04-18",
+                        "rates": [
+                            {
+                                "activity_id": "1",
+                                "client_rate": 1500
+                            }
+                        ]
                     }
                 ]
             }
