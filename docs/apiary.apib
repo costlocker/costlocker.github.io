@@ -180,7 +180,7 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 
 #### _October 2019_
 
-* [Create/edit time-entries](#reference/0/time-entries/create/update-time-entries), even if assignment not yet exists _(**experimental feature:** `meta.unknown_assigments: 'create'`)_
+* [Create/edit time-entries](#reference/0/time-entries/create/update-time-entries), even if assignment not yet exists _(**experimental feature:** `meta.unknown_assignments: 'create'`)_
 
 #### _November 2019_
 
@@ -420,7 +420,7 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 + task_id (number, optional)
 
 #### clTimeentryAssignmentEdit (clTimeentryAssignment)
-+ task (string, optional) - task id or name (name is necessary for creating new assignments via `meta.unknown_assigments: 'create')
++ task (string, optional) - task id or name (name is necessary for creating new assignments via `meta.unknown_assignments: 'create')
 
 #### clWebhookDelete (object)
 + uuid (clUuid, required)
@@ -593,7 +593,7 @@ We return [json:api responses](http://jsonapi.org/format/#document-structure). `
                     }
                 ],
                 "links":{
-                    "documentation":"http://docs.costlocker.apiary.io/",
+                    "documentation":"https://costlocker.docs.apiary.io/",
                     "authentication":"https://new.costlocker.com/api-token"
                 }
             }
@@ -701,7 +701,7 @@ Use your app name and personal token in Authorization header: `Authorization:Bas
 
         {
            "links":{
-              "documentation":"http://docs.costlocker.apiary.io/",
+              "documentation":"https://costlocker.docs.apiary.io/",
               "authentication":"https://new.costlocker.com/api-token"
            }
         }
@@ -1644,7 +1644,7 @@ E.g. `meta.finished_projects: "reopen"` replaces three API requests:
             + finished_projects (enum, optional)
                 + error - editing entries from finished projects causes an error
                 + reopen - finished project is automatically opened and closed
-            + unknown_assigments (enum, optional)
+            + unknown_assignments (enum, optional)
                 + error - non-existent assignment causes an error
                 + create - !!! EXPERIMENTAL FEATURE !!! empty assignment is created (no hourly rate, no estimated hours)
         + data (array[clTimeentryEdit], required)
