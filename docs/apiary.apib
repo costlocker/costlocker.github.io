@@ -186,6 +186,11 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 
 * [**Simple_Clients**](/#reference/0/clients) - add `withRates` parameter
 
+#### _January 2020_
+
+* [**Projects API**](#reference/0/projects) - advanced action for duplicating recurring project _(`"action": "duplicate"`)_
+* [**Time-entries API**](#reference/0/time-entries/create/update-time-entries) - add pointer to every error message _(previously you didn't know which time-entry caused an error in Bulk API)_
+
 ### Data Structures
 
 #### clUuid (string, optional) - `87d2a4e5-5a2e-413d-ab4b-5b3771cc03c1`
@@ -208,6 +213,7 @@ Take a look at an app for [importing projects from Harvest](https://harvest.inte
 + delete - delete a project. You can't undo this!
 + finish - finish a running project
 + reopen - reopen a finished project
++ duplicate - duplicate manually a recurring project
 
 #### clProject (object)
 + id (number, optional)
@@ -1106,6 +1112,10 @@ _We don't support creating activity or client without project!_
                     {
                         "name": "Reopened project",
                         "action": "reopen"
+                    },
+                    {
+                        "name": "Recurring project",
+                        "action": "duplicate"
                     }
                 ]
             }
@@ -1226,6 +1236,18 @@ _We don't support creating activity or client without project!_
                     {
                         "action": "reopen",
                         "id": "2102",
+                        "items": [],
+                        "links": {
+                            "project": "https://new.costlocker.com/api-public/v2/projects/123456",
+                            "peoplecosts": "https://new.costlocker.com/api-public/v2/projects/123456?types=peoplecosts",
+                            "billing": "https://new.costlocker.com/api-public/v2/projects/123456?types=billing",
+                            "expenses": "https://new.costlocker.com/api-public/v2/projects/123456?types=expenses",
+                            "discounts": "https://new.costlocker.com/api-public/v2/projects/123456?types=discounts"
+                        }
+                    },
+                    {
+                        "action": "duplicate",
+                        "id": "2103",
                         "items": [],
                         "links": {
                             "project": "https://new.costlocker.com/api-public/v2/projects/123456",
@@ -1858,6 +1880,9 @@ E.g. `meta.finished_projects: "reopen"` replaces three API requests:
                     {
                         "status": 409,
                         "title": "Invalid time-entries",
+                        "source":{
+                            "pointer":"/0"
+                        },
                         "detail": "Person cannot track more than one entry at time"
                     }
                 ]
@@ -3071,6 +3096,7 @@ Response contains `profit`, `revenue`, `costs`, ..., if [the authenticated user]
     + Attributes
         + uuid (array[clUuid], optional) - array of entries id's to be limited
         + project (array[number], optional) - array of projects id's to be limited
+        + recurring (array[number], optional) - array of parent recurring projects id's to be limited
         + person (array[number], optional) - array of people id's to be limited
         + activity (array[number], optional) - array of acitivities is's to be limited
         + client (array[number], optional) - array of clients id's to be limited
@@ -3261,7 +3287,7 @@ Aggregated project person monthly timesheet.
                         "da_month": "2015-07-01",
                         "project": "1",
                         "person": "1",
-                        "activity": "1",
+                        "client": "1",
                         "interval": 1800,
                         "billable": 1000
                     }
